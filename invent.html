@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inventario - POS</title>
+<style>
+body { font-family: Arial, sans-serif; margin:20px; }
+table { width:100%; border-collapse: collapse; margin-top:10px;}
+th, td { border:1px solid #ccc; padding:8px; text-align:left;}
+button { padding:5px 10px; margin:5px; }
+</style>
+</head>
+<body>
+<h1>Inventario</h1>
+
+<input type="text" id="producto" placeholder="Nombre del producto">
+<input type="number" id="cantidad" placeholder="Cantidad">
+<input type="number" id="precio" placeholder="Precio unitario">
+<button onclick="agregarProducto()">Agregar Producto</button>
+
+<table id="tablaInventario">
+<tr>
+<th>Producto</th><th>Cantidad</th><th>Precio</th><th>Acciones</th>
+</tr>
+</table>
+
+<script>
+let inventario = JSON.parse(localStorage.getItem('inventario')) || [];
+
+function mostrarInventario() {
+    const tabla = document.getElementById('tablaInventario');
+    tabla.innerHTML = '<tr><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Acciones</th></tr>';
+    inventario.forEach((prod, index) => {
+        tabla.innerHTML += `<tr>
+        <td>${prod.nombre}</td>
+        <td>${prod.cantidad}</td>
+        <td>${prod.precio}</td>
+        <td>
+        <button onclick="eliminarProducto(${index})">Eliminar</button>
+        </td>
+        </tr>`;
+    });
+}
+
+function agregarProducto() {
+    const nombre = document.getElementById('producto').value;
+    const cantidad = parseInt(document.getElementById('cantidad').value);
+    const precio = parseFloat(document.getElementById('precio').value);
+    if(!nombre || !cantidad || !precio) return alert('Completa todos los campos');
+    inventario.push({nombre, cantidad, precio});
+    localStorage.setItem('inventario', JSON.stringify(inventario));
+    mostrarInventario();
+}
+
+function eliminarProducto(index){
+    inventario.splice(index,1);
+    localStorage.setItem('inventario', JSON.stringify(inventario));
+    mostrarInventario();
+}
+
+mostrarInventario();
+</script>
+</body>
+</html>

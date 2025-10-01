@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Login - Farmacia Ortopedia Lili</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {background:#16213e;color:#e5e7eb;font-family:system-ui,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;margin:0;}
+.container {display:flex;background:#ffffff;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,0.25);overflow:hidden;max-width:900px;width:90%;min-height:400px;animation: fadeIn 1s ease-in-out;}
+.left-panel {flex:1;background:#ffffff;color:#000000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 20px;text-align:center;}
+.left-panel img {width:250px;margin-bottom:20px;}
+.left-panel .desc-box {font-size:0.95rem;line-height:1.5;color:#000;}
+.right-panel {flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 20px;background:#30416b;}
+.login-box {width:100%;max-width:300px;}
+.login-box h3 {color:#60a5fa;margin:0.5em 0;}
+input, button {display:block;width:100%;margin-bottom:1.2em;padding:12px;border-radius:7px;border:none;}
+input {background:#f3f4f6;color:#111827;font-size:1.05em;}
+input::placeholder {color:#6b7280;}
+button {background:#2563eb;color:white;font-weight:bold;font-size:1.1em;cursor:pointer;transition:transform 0.2s, background 0.2s;}
+button:hover {background:#1747a7;transform: scale(1.05);}
+.msg {margin:-0.9em 0 1.3em 0;color:#f87171;text-align:center;height:1.3em;}
+@keyframes fadeIn {from {opacity:0;transform:scale(0.95);} to {opacity:1;transform:scale(1);}}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="left-panel">
+    <img src="ventas.png" alt="Logo Farmacia Ortopedia Lili">
+    <div class="slogan">💊 Ventas fáciles, inventario siempre al día 💊</div>
+    <div class="desc-box">
+      <p><strong>Farmacia Ortopedia Lili</strong> te ofrece un sistema de ventas rápido, fácil y seguro. Gestiona inventarios grandes, controla tus ventas y mantén tu negocio siempre organizado.</p>
+    </div>
+  </div>
+  <div class="right-panel">
+    <form class="login-box" id="loginForm" autocomplete="off">
+      <h3>🏪 VENTASLILI - ORTOPEDIA & FARMACIA 🏪</h3>
+      <h3>🔐 Ingresa Contraseña 🔐</h3>
+      <input id="usuario" type="text" placeholder="Usuario" required>
+      <input id="pass" type="password" placeholder="Contraseña" required>
+      <div class="msg" id="msg"></div>
+      <button type="submit">Entrar</button>
+    </form>
+  </div>
+</div>
+<script>
+// Usuario administrador forzado
+const adminUser = {usuario:"AdminFarmalili", nombre:"Administrador", pass:"Mariposa", area:"Admin", pagina:"admin.html"};
+const usuariosBase = [
+  adminUser,
+  {usuario:"farmacia", nombre:"Farmacia", pass:"farmacia123", area:"Farmacia", pagina:"ven.html"},
+  {usuario:"tienda", nombre:"Tienda", pass:"tienda123", area:"Tienda", pagina:"ventast.html"},
+  {usuario:"papeleria", nombre:"Papelería", pass:"papeleria123", area:"Papelería", pagina:"ventasp.html"}
+];
+let usuarios = JSON.parse(localStorage.getItem("usuarios") || "[]");
+// Asegurar admin siempre exista
+if(!usuarios.find(u=>u.usuario === adminUser.usuario)){
+  usuarios.push(adminUser);
+  localStorage.setItem("usuarios", JSON.stringify(usuarios));
+}
+// Validación login
+document.getElementById("loginForm").onsubmit = function(e){
+  e.preventDefault();
+  const u = document.getElementById("usuario").value.trim();
+  const p = document.getElementById("pass").value.trim();
+  const msg = document.getElementById("msg");
+  msg.textContent="";
+  const usuario = usuarios.find(x=>x.usuario===u && x.pass===p);
+  if(usuario){
+    localStorage.setItem("usuarioActivo", usuario.usuario);
+    localStorage.setItem("areaActiva", usuario.area);
+    localStorage.setItem("paginaDestino", usuario.pagina);
+    window.location.href = usuario.pagina;
+  } else {
+    msg.textContent = "Usuario o contraseña incorrectos";
+  }
+};
+</script>
+</body>
+</html>

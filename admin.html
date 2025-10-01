@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Panel Admin - Farmacia Ortopedia Lili</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {margin:0; font-family:system-ui,sans-serif; background:#16213e; color:#e5e7eb;}
+header {background:#0f172a; padding:1.2rem; text-align:center; font-size:2rem; font-weight:bold;}
+.container {display:flex; min-height:30px;}
+aside {background:#1a243b; width:220px; padding:10px;}
+aside h2 {color:#60a5fa; font-size:1.2rem; padding: 4px 0; margin-bottom:0.8rem;}
+.nav-btn {
+  display:block; width:100%; margin:0.3rem 0; padding:0.7rem 1rem;
+  border:none; background:none; color:#e5e7eb; text-align:left;
+  border-radius:8px; cursor:pointer; transition:0.2s;
+}
+.nav-btn.active, .nav-btn:hover {background:#2563eb; color:white;}
+main {flex:1; padding:0; background:#1e2f52;}
+iframe {width:100%; height:calc(100vh - 70px); border:none; background:white;}
+.logout {
+  position:fixed;top:16px;right:24px;
+  background:#dc2626; padding:8px 16px;
+  border-radius:8px;font-weight:bold; cursor:pointer;
+}
+.logout:hover {background:#b91c1c;}
+.admin-section {display:none; padding:2em; border-radius:16px; margin:2em; background:#192541;}
+.admin-section.active {display:block;}
+table {width:100%; border-collapse:collapse; margin-top:1em; background:#1b2741;}
+th,td {border:1px solid #334; padding:7px 6px; text-align:left;}
+th {background:#223; color:#facc15;}
+tr:nth-child(even) {background:#232f4b;}
+input, select, button { padding:7px; border-radius:6px; border:none;}
+input, select { margin:0 0.4rem 0.7rem 0; background:#141f39; color:#fff;}
+button { background:#2563eb; color:white; cursor:pointer;}
+.btn-del {background:#dc2626;}
+.btn-edit {background:#f59e0b;}
+.btn-save {background:#16a34a;}
+.btn-small { font-size:0.95em; padding:3px 9px; margin-left:4px;}
+.flex {display:flex; gap:1em; align-items:center;}
+.area-chip {font-size:0.95em; background:#2563eb; color:white; border-radius:6px; padding:2px 10px;}
+</style>
+</head>
+<body>
+<header>👑  ADMINISTRACIÓN  👑</header>
+<button class="logout" onclick="cerrarSesion()">Cerrar Sesión</button>
+<div class="container">
+  <aside>
+    <hr>
+    <h2>🏪 Ventas</h2>
+    <button class="nav-btn" onclick="showPage('ven.html',this)">💊 Ventas - Farmacia</button>
+    <button class="nav-btn" onclick="showPage('ventast.html',this)">🏬 Ventas - Tienda</button>
+    <button class="nav-btn" onclick="showPage('ventasp.html',this)">📚 Ventas - Papelería</button>
+    <hr>
+    <h2>👤 Usuarios</h2>
+    <button class="nav-btn" onclick="showSection('usuarios',this)">👤 Gestión de Usuarios</button>
+    <button class="nav-btn" onclick="showSection('actividad',this)">📋 Actividad Usuarios</button>
+  </aside>
+  <main>
+    <iframe id="panelFrame" src=""></iframe>
+
+    <!-- Sección usuarios -->
+    <div id="usuarios" class="admin-section">
+      <h2>👤 Gestión de Usuarios 👤</h2>
+      <table id="tabla-users">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Área</th>
+            <th>Contraseña</th>
+            <th>Página</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <h3> ➕ Agregar Usuario 👤</h3>
+      <input id="user-nombre" placeholder="Usuario">
+      <select id="user-area">
+        <option value="">Selecciona área</option>
+        <option value="Farmacia">Farmacia</option>
+        <option value="Tienda">Tienda</option>
+        <option value="Papelería">Papelería</option>
+        <option value="Admin">Admin</option>
+      </select>
+      <select id="user-pagina">
+        <option value="">Selecciona página</option>
+        <option value="admin.html">admin.html</option>
+        <option value="ven.html">Farmacia/ven.html</option>
+        <option value="ventast.html">Tienda/ventast.html</option>
+        <option value="ventasp.html">Papeleria/ventasp.html</option>
+      </select>
+      <input id="user-pass" type="password" placeholder="Contraseña">
+      <button class="btn-save" onclick="agregarUsuario()">Agregar</button>
+    </div>
+
+    <!-- Sección actividad admin -->
+    <div id="actividad" class="admin-section">
+      <h2>📋 Registro de Actividad Usuarios</h2>
+      <table id="tabla-actividad">
+        <thead>
+          <tr>
+            <th>Usuario</th>
+            <th>Actividad</th>
+            
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<script>
+// --- Usuarios base ---
+const usuariosBase = [
+  {nombre:"AdminFarmalili", area:"Admin", pass:"Mariposa", pagina:"admin.html"},
+  {nombre:"farmacia", area:"Farmacia", pass:"farmacia123", pagina:"ven.html"},
+  {nombre:"tienda", area:"Tienda", pass:"tienda123", pagina:"ventast.html"},
+  {nombre:"papeleria", area:"Papelería", pass:"papeleria123", pagina:"ventasp.html"}
+];
+
+// Cargar usuarios desde localStorage
+let usuarios = JSON.parse(localStorage.getItem("usuarios")||"[]");
+if(usuarios.length===0){
+  usuarios = usuariosBase;
+  localStorage.setItem("usuarios", JSON.stringify(usuarios));
+}
+
+// --- Admin siempre activo ---
+const admin = "AdminFarmalili";
+localStorage.setItem("usuarioActivo", admin);
+localStorage.setItem("areaActiva","Admin");
+localStorage.setItem("paginaDestino","admin.html");
+localStorage.setItem("modoEspectador","true");
+
+// --- Registro de actividad ---
+let actividad = JSON.parse(localStorage.getItem("actividad")||"[]");
+
+// Guardar inicio de sesión para admin
+let inicio = new Date().toLocaleString();
+actividad.push({usuario:admin, inicio:inicio, cierre:"-"});
+localStorage.setItem("actividad", JSON.stringify(actividad));
+
+function actualizarTablaActividad(){
+  let tbody = document.querySelector("#tabla-actividad tbody");
+  tbody.innerHTML="";
+  actividad.forEach(a=>{
+    tbody.innerHTML+=`<tr><td>${a.usuario}</td><td>${a.inicio}</td></tr>`;
+  });
+}
+actualizarTablaActividad();
+
+// --- Navegación ---
+function showPage(page, btn){
+  document.getElementById('panelFrame').style.display='block';
+  document.querySelectorAll('.admin-section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('panelFrame').src=page+"?viewer=admin";
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function showSection(id, btn){
+  document.getElementById('panelFrame').style.display='none';
+  document.querySelectorAll('.admin-section').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// --- Cerrar sesión ---
+function cerrarSesion(){ 
+  // Registrar cierre
+  actividad = JSON.parse(localStorage.getItem("actividad")||"[]");
+  let ultimo = actividad.length-1;
+  actividad[ultimo].cierre = new Date().toLocaleString();
+  localStorage.setItem("actividad", JSON.stringify(actividad));
+  actualizarTablaActividad();
+
+  localStorage.removeItem("usuarioActivo"); 
+  localStorage.removeItem("modoEspectador");
+  window.location.href="index.html"; 
+}
+
+// --- Usuarios ---
+function renderUsers(){
+  let tbody = document.querySelector("#tabla-users tbody");
+  tbody.innerHTML="";
+  usuarios.forEach((u,i)=>{
+    let esAdmin = u.nombre.toLowerCase()==="adminfarmalili";
+    tbody.innerHTML+=`<tr>
+      <td>${u.nombre}</td>
+      <td>${u.area}</td>
+      <td>${u.pass}</td>
+      <td>${u.pagina}</td>
+      <td>
+        ${esAdmin?'<span style="color:#888">Bloqueado</span>':
+        `<button class="btn-edit btn-small" onclick="editarUsuario(${i})">Editar</button>
+         <button class="btn-del btn-small" onclick="borrarUsuario(${i})">Borrar</button>`}
+      </td>
+    </tr>`;
+  });
+}
+
+function agregarUsuario(){
+  let nombre=document.getElementById("user-nombre").value.trim();
+  let area=document.getElementById("user-area").value;
+  let pass=document.getElementById("user-pass").value.trim();
+  let pagina=document.getElementById("user-pagina").value;
+  
+  if(!nombre || !area || !pass || !pagina) return alert("Completa todos los campos");
+  if(usuarios.find(u=>u.nombre===nombre)) return alert("Usuario ya existe");
+
+  usuarios.push({nombre, area, pass, pagina});
+  localStorage.setItem("usuarios", JSON.stringify(usuarios));
+  renderUsers();
+
+  // Registrar inicio de sesión al agregar
+  let inicio = new Date().toLocaleString();
+  actividad.push({usuario:nombre, inicio:inicio, cierre:"-"});
+  localStorage.setItem("actividad", JSON.stringify(actividad));
+  actualizarTablaActividad();
+}
+
+function editarUsuario(i){
+  let u = usuarios[i];
+  let nuevo = prompt("Editar usuario (nombre,area,contraseña,página)", `${u.nombre},${u.area},${u.pass},${u.pagina}`);
+  if(!nuevo) return;
+  let [nombre, area, pass, pagina] = nuevo.split(",");
+  if(!nombre || !area || !pass || !pagina) return alert("Todos los campos son obligatorios");
+  usuarios[i] = {nombre, area, pass, pagina};
+  localStorage.setItem("usuarios", JSON.stringify(usuarios));
+  renderUsers();
+}
+
+function borrarUsuario(i){
+  if(usuarios[i].nombre.toLowerCase()==="adminfarmalili") return alert("No puedes borrar al administrador");
+  
+  // Registrar cierre de sesión del usuario borrado
+  let cierre = new Date().toLocaleString();
+  actividad.push({usuario:usuarios[i].nombre, inicio:"-", cierre:cierre});
+  localStorage.setItem("actividad", JSON.stringify(actividad));
+  actualizarTablaActividad();
+
+  usuarios.splice(i,1);
+  localStorage.setItem("usuarios", JSON.stringify(usuarios));
+  renderUsers();
+}
+
+renderUsers();
+</script>
+</body>
+</html>

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📜 Historial - Tienda Lili</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    color: #fff;
+}
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #1e3a8a;
+    padding: 10px 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.header-left img {
+    width: 100px; 
+    height: 100px;
+}
+.header-title-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+header h1 {
+    font-size: 24px;
+    color: #00f6ff;
+    text-shadow: 0 0 8px #00f6ff;
+    margin: 0;
+}
+.nav-buttons {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 5px;
+}
+header .nav-buttons button, header .user-info button {
+    background: #fff;
+    color: #1e3a8a;
+    border: none;
+    padding: 8px 15px;
+    cursor: pointer;
+    border-radius: 8px;
+    font-weight: bold;
+    transition: 0.3s;
+}
+header .nav-buttons button:hover, header .user-info button:hover {
+    background: #dbeafe;
+}
+header .user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.container {
+    margin: 20px auto;
+    background: rgba(255,255,255,0.05);
+    padding: 20px;
+    border-radius: 12px;
+    max-width: 1300px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+}
+h2 {
+    text-align: center;
+    color: #00f6ff;
+    margin-bottom: 15px;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 8px;
+    overflow: hidden;
+    table-layout: fixed;
+}
+th, td {
+    padding: 12px;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+th {
+    background: #1e3a8a;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+tr:nth-child(even) {
+    background: rgba(255,255,255,0.05);
+}
+tfoot td {
+    font-weight: bold;
+    color: #00f6ff;
+    font-size: 18px;
+}
+#panelCobro {
+    display:none;
+    position:fixed;
+    top:10%;
+    left:50%;
+    transform:translateX(-50%);
+    background:rgba(0,0,50,0.95);
+    padding:20px;
+    border-radius:10px;
+    box-shadow:0 0 20px #000;
+    z-index:1000;
+    max-width:500px;
+}
+#panelCobro h2 { text-align:center; margin-bottom:10px; }
+#panelCobro div { margin-bottom:10px; }
+#panelCobro input { width:70px; padding:5px; border-radius:6px; border:none; }
+#panelCobro button { margin-top:10px; padding:8px 15px; border:none; border-radius:8px; cursor:pointer; font-weight:bold; }
+#panelCobro button:hover { opacity:0.8; }
+</style>
+</head>
+<body>
+
+<header>
+    <div class="header-left">
+        <img src="tienda.jpg" alt="Logo Tienda Lili">
+        <div class="header-title-container">
+            <h1>📜 Historial - Tienda Lili</h1>
+            <div class="nav-buttons">
+                <button onclick="location.href='ventast.html'">💳 Ventas</button>
+                <button onclick="location.href='inventienda.html'">📦 Inventario</button>
+                <button onclick="location.href='tiendah.html'">📜 Historial</button>
+                <span id="usuarioActivo">👤 Cajero: </span>
+            </div>
+        </div>
+    </div>
+    <div class="user-info">
+        <button onclick="cerrarSesion()">Cerrar Sesión</button>
+    </div>
+</header>
+
+<div class="container">
+    <h2>Historial de Ventas</h2>
+    <table id="tablaHistorial">
+        <thead>
+            <tr>
+                <th>Folio</th>
+                <th>Usuario</th>
+                <th>Fecha / Hora</th>
+                <th>Producto</th>
+                <th>Código</th>
+                <th>Cantidad</th>
+                <th>Precio</th>
+                <th>Total</th>
+                <th>Método</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <h2>Corte de Caja</h2>
+    <table id="tablaCorte">
+        <thead>
+            <tr>
+                <th>Fecha / Hora</th>
+                <th>Usuario</th>
+                <th>Efectivo</th>
+                <th>Transferencia</th>
+                <th>Tarjeta</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <button onclick="abrirPanelCobro()">💰 Realizar Corte</button>
+</div>
+
+<div id="panelCobro">
+    <h2>💵 Corte de Caja Detallado</h2>
+    <div id="denominaciones">
+        <h3>Efectivo</h3>
+        <div><label>$200:</label><input type="number" min="0" value="0" onchange="calcularEfectivo()"></div>
+        <div><label>$100:</label><input type="number" min="0" value="0" onchange="calcularEfectivo()"></div>
+        <div><label>$50:</label><input type="number" min="0" value="0" onchange="calcularEfectivo()"></div>
+        <div><label>$20:</label><input type="number" min="0" value="0" onchange="calcularEfectivo()"></div>
+        <div><label>$10:</label><input type="number" min="0" value="0" onchange="calcularEfectivo()"></div>
+        <div><label>$5:</label><input type="number" min="0" value="0" onchange="calcularEfectivo()"></div>
+        <div><label>$1:</label><input type="number" min="0" value="0" onchange="calcularEfectivo()"></div>
+        <p>Total Efectivo: $<span id="totalEfectivo">0.00</span></p>
+    </div>
+    <div>
+        <h3>Otros Métodos</h3>
+        <label>Transferencia: $</label><input type="number" min="0" value="0" id="totalTransferencia"><br>
+        <label>Tarjeta: $</label><input type="number" min="0" value="0" id="totalTarjeta">
+    </div>
+    <p>Total de Corte: $<span id="totalCorte">0.00</span></p>
+    <button onclick="confirmarCorte()">✅ Confirmar</button>
+    <button onclick="cerrarPanel()">❌ Cancelar</button>
+</div>
+
+<script>
+// Usuario activo
+let usuario = localStorage.getItem('usuarioActivo') || 'Admin';
+document.getElementById('usuarioActivo').textContent = `👤 Cajero: ${usuario}`;
+
+// Cerrar sesión
+function cerrarSesion(){ localStorage.removeItem('usuarioActivo'); location.href='index.html'; }
+
+// Mostrar historial
+function mostrarHistorial(){
+    let historial = JSON.parse(localStorage.getItem('historial')) || [];
+    const tbody = document.querySelector("#tablaHistorial tbody");
+    tbody.innerHTML = '';
+    historial.forEach(v=>{
+        let fila = document.createElement('tr');
+        fila.innerHTML = `<td>${v.folio}</td>
+                          <td>${v.usuario}</td>
+                          <td>${v.fecha}</td>
+                          <td>${v.nombre}</td>
+                          <td>${v.codigo}</td>
+                          <td>${v.cantidad}</td>
+                          <td>${v.precio.toFixed(2)}</td>
+                          <td>${v.total.toFixed(2)}</td>
+                          <td>${v.metodo}</td>`;
+        tbody.appendChild(fila);
+    });
+}
+
+// Panel cobro
+function abrirPanelCobro(){ document.getElementById('panelCobro').style.display='block'; calcularEfectivo(); }
+function cerrarPanel(){ document.getElementById('panelCobro').style.display='none'; }
+
+// Calcular efectivo y total
+function calcularEfectivo(){
+    const inputs = document.querySelectorAll('#denominaciones input');
+    const valores = [200,100,50,20,10,5,1];
+    let total = 0;
+    inputs.forEach((inp,i)=> total += inp.value*valores[i]);
+    document.getElementById('totalEfectivo').textContent = total.toFixed(2);
+    actualizarTotal();
+}
+function actualizarTotal(){
+    const efectivo = parseFloat(document.getElementById('totalEfectivo').textContent) || 0;
+    const transferencia = parseFloat(document.getElementById('totalTransferencia').value) || 0;
+    const tarjeta = parseFloat(document.getElementById('totalTarjeta').value) || 0;
+    document.getElementById('totalCorte').textContent = (efectivo+transferencia+tarjeta).toFixed(2);
+}
+
+// Confirmar corte y generar ticket
+function confirmarCorte(){
+    const efectivo = parseFloat(document.getElementById('totalEfectivo').textContent) || 0;
+    const transferencia = parseFloat(document.getElementById('totalTransferencia').value) || 0;
+    const tarjeta = parseFloat(document.getElementById('totalTarjeta').value) || 0;
+    const total = efectivo + transferencia + tarjeta;
+    const fecha = new Date().toLocaleString();
+
+    // Guardar corte
+    let cortes = JSON.parse(localStorage.getItem('cortes')) || [];
+    cortes.push({fecha, usuario, efectivo, transferencia, tarjeta, total});
+    localStorage.setItem('cortes', JSON.stringify(cortes));
+
+    // Actualizar tabla
+    mostrarCortes();
+
+    // Generar ticket PDF
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text("📜 Corte de Caja - Tienda Lili", 20,20);
+    doc.setFontSize(12);
+    doc.text(`Usuario: ${usuario}`, 20,30);
+    doc.text(`Fecha: ${fecha}`, 20,37);
+    doc.text(`Efectivo: $${efectivo.toFixed(2)}`, 20,44);
+    doc.text(`Transferencia: $${transferencia.toFixed(2)}`, 20,51);
+    doc.text(`Tarjeta: $${tarjeta.toFixed(2)}`, 20,58);
+    doc.text(`TOTAL: $${total.toFixed(2)}`, 20,65);
+    doc.save(`Corte_${fecha.replace(/[/,: ]/g,'_')}.pdf`);
+
+    cerrarPanel();
+}
+
+// Mostrar cortes
+function mostrarCortes(){
+    const tbody = document.querySelector("#tablaCorte tbody");
+    const cortes = JSON.parse(localStorage.getItem('cortes')) || [];
+    tbody.innerHTML='';
+    cortes.forEach(c=>{
+        let fila = document.createElement('tr');
+        fila.innerHTML=`<td>${c.fecha}</td><td>${c.usuario}</td><td>${c.efectivo.toFixed(2)}</td><td>${c.transferencia.toFixed(2)}</td><td>${c.tarjeta.toFixed(2)}</td><td>${c.total.toFixed(2)}</td>`;
+        tbody.appendChild(fila);
+    });
+}
+
+mostrarHistorial();
+mostrarCortes();
+</script>
+
+</body>
+</html>

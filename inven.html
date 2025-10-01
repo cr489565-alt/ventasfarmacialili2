@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>📦 Inventario - Farmacia Lili Óptica</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<style>
+/* --- estilos --- */
+* {box-sizing:border-box;}
+body { font-family: system-ui, sans-serif; background:#1e2f52; color:#e5e7eb; margin:0; padding:0;}
+header { background:#111827; padding:16px; font-size:30px; font-weight:bold; text-align:center; position:relative;}
+header img { position:absolute; left:10px; top:50%; transform:translateY(-50%); width:150px; height:100px; border-radius:25px;}
+main {padding:16px; display:flex; flex-direction:column; gap:16px;}
+.main-menu { display:flex; gap:12px; background:#111827; padding:10px 16px; position:sticky; top:0; z-index:1000; border-bottom:1px solid #1f2937;}
+.main-menu .menu-link {color:#e5e7eb; text-decoration:none; padding:8px 12px; border-radius:8px; font-weight:500; transition:0.2s;}
+.main-menu .menu-link:hover {background:#1f2937;}
+.main-menu .menu-link.active {background:#2563eb; color:white;}
+#logout {background:#dc2626; margin-left:auto; padding:8px 12px; border-radius:8px; color:white; border:none; cursor:pointer; transition:0.2s;}
+#logout:hover {background:#b91c1c;}
+#admin {background:#26a9dc; padding:8px 12px; border-radius:8px; color:white; border:none; cursor:pointer; transition:0.2s;}
+#admin:hover {background:#2563eb;}
+#searchBar {margin-left:10px; padding:8px; border-radius:6px; border:none; width:200px;}
+#cajero {font-size:14px; margin-left:16px; color:#facc15;}
+input, button, select {padding:9px; border-radius:6px; border:none; margin:4px 0;}
+input, select {width:200px;}
+button {background:#2563eb; color:white; cursor:pointer; font-weight:bold;}
+button:hover {background:#1d4ed8;}
+.btn{padding:0.4rem 1rem; border:none; border-radius:8px; cursor:pointer; font-weight:500; transition:0.2s;}
+.btn-edit{background:#2563eb; color:#fff;} .btn-edit:hover{background:#1e40af;}
+.btn-del{background:#dc2626; color:#fff;} .btn-del:hover{background:#991b1b;}
+.btn-pdf{background:#facc15; color:#000; margin-left:5px;} .btn-pdf:hover{background:#eab308;}
+.oculto{display:none;}
+.panel-admin{background:#111827; border:2px solid #2563eb; padding:1rem; border-radius:12px; margin-bottom:1rem;}
+/* Colores dinámicos */
+.stock-verde{background:#16a34a; color:#fff;}
+.stock-amarillo{background:#eab308; color:#000;}
+.stock-rojo{background:#b91c1c; color:#fff;}
+.stockmin-rojo{background:#f6ff00; color:#000;}
+.cad-verde{background:#16a34a; color:#fff;}
+.cad-amarillo{background:#eab308; color:#000;}
+.cad-rojo{background:#b91c1c; color:#fff;}
+.entradas-azul{background:#2563eb; color:#fff;}
+.categoria-farmacia{background:#9d4edd; color:#fff;}
+.categoria-tienda{background:#7c3e12; color:#fff;}
+.categoria-antibiotico{background:#f97316; color:#fff;}
+.categoria-papeleria{background:#ec4899; color:#fff;}
+.categoria-proveedores{background:#f59e0b; color:#fff;}
+.categoria-bebes{background:#22d3ee; color:#000;}
+.categoria-tecnologia{background:#6366f1; color:#fff;}
+.categoria-accesorios{background:#f43f5e; color:#fff;}
+section { text-align: center; width: 95%; background: linear-gradient(120deg,#111827 80%,#2563eb11 100%); padding: 24px; border-radius: 15px; box-shadow: 0 8px 28px rgba(0,0,0,.35); margin: 12px auto; }
+h2.seccion { display:flex; justify-content:space-between; align-items:center; margin-top:0; color:#60a5fa; }
+table {width:100%; border-collapse:collapse; margin-top:12px;}
+th, td {padding:8px; border:1px solid #374151; text-align:left;}
+th {background:#1f2937;}
+</style>
+</head>
+<body>
+<header>
+    <img src="ventas.png" alt="Logo Ventas">
+    📦 Inventario - Farmacia Lili Óptica📦
+</header>
+<nav class="main-menu">
+  <a href="ven.html" class="menu-link">💳 Ventas</a>
+  <a href="inven.html" class="menu-link active">📦 Inventario</a>
+  <a href="hitori.html" class="menu-link">📜 Historial</a>
+  <span id="cajero"></span>
+  <button id="admin">🔑 Admin</button>
+  <input type="text" id="searchBar" placeholder="🔎 Buscar...">
+  <button id="btnCorte" class="btn btn-pdf"></button>
+  <button id="logout">Cerrar Sesión</button>
+</nav>
+
+<section id="loginSection" class="oculto">
+  <h2>👑 PANEL ADMINISTRACIÓN 👑</h2>
+  🔐 Ingresa Contraseña
+  <form id="loginForm">
+    <input type="password" id="adminPass" placeholder="Contraseña" required>
+    <button type="submit" class="btn btn-edit">Ingresar</button>
+  </form>
+</section>
+
+<section id="adminSection" class="oculto panel-admin">
+  <h2>⚙️ Panel Administrador</h2>
+  <form id="addForm" style="margin-top:1rem;">
+    <h3>➕ Agregar Producto</h3>
+    <input type="text" id="nombre" placeholder="Nombre" required>
+    <input type="text" id="codigo" placeholder="Código" required>
+    <input type="number" id="precio" placeholder="Precio">
+    <div id="loteCadFields" class="oculto">
+      <input type="text" id="lote" placeholder="Lote (solo antibióticos)">
+      <input type="date" id="caducidad" placeholder="Caducidad (solo antibióticos)">
+    </div>
+    <input type="number" id="stock" placeholder="Stock">
+    <input type="number" id="stockMin" placeholder="Stock Mínimo">
+    <input type="number" id="entradas" placeholder="Entradas">
+    <select id="categoria" required>
+      <option value="Antibiótico">Antibiótico</option>
+      <option value="Papelería">Papelería</option>
+      <option value="Tienda">Tienda</option>
+      <option value="Farmacia">Farmacia</option>
+      <option value="Proveedores">Proveedores</option>
+      <option value="Bebés">Bebés</option>
+      <option value="Tecnología">Tecnología</option>
+      <option value="Accesorios">Accesorios</option>
+    </select>
+    <div style="margin-top:10px;">
+      <button type="submit" class="btn btn-edit">Guardar</button>
+      <button type="button" id="salirAdmin" class="btn btn-del">Salir</button>
+    </div>
+  </form>
+</section>
+
+<section id="generalSection">
+  <h2 class="seccion">📦 Inventario - General
+    <button class="btn btn-pdf" onclick="imprimirPDF('tablaGeneralCompleta','Inventario General')">📄 General</button>
+    <button class="btn btn-pdf" onclick="imprimirPDF('tablaAntibioticos','Inventario Antibióticos')">💊 Antibióticos</button>
+  </h2>
+  <table id="tablaGeneralCompleta">
+    <thead>
+      <tr>
+        <th>Nombre</th><th>Código</th><th>Precio</th><th>Lote</th>
+        <th>Stock</th><th>Stock Mínimo</th><th>Entradas</th>
+        <th>Categoría</th><th>Caducidad</th><th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</section>
+
+<section id="AntibioticosSection">
+  <h2 class="seccion">💊 Antibióticos</h2>
+  <table id="tablaAntibioticos">
+    <thead>
+      <tr>
+        <th>Nombre</th><th>Código</th><th>Precio</th><th>Lote</th>
+        <th>Stock</th><th>Stock Mínimo</th><th>Entradas</th>
+        <th>Categoría</th><th>Caducidad</th><th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</section>
+
+<section id="ProveedoresSection">
+  <h2 class="seccion">📦 Proveedores</h2>
+  <table id="tablaProveedores">
+    <thead>
+      <tr>
+        <th>Nombre</th><th>Código</th><th>Categoría</th><th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</section>
+
+<script>
+let usuarioActivo = localStorage.getItem("usuarioActivo") || "Cajero";
+document.getElementById("cajero").textContent = "👤 Cajero: " + usuarioActivo;
+let userType='cajero';
+const adminBtn=document.getElementById('admin');
+const loginSection=document.getElementById('loginSection');
+const adminSection=document.getElementById('adminSection');
+const loginForm=document.getElementById('loginForm');
+const addForm=document.getElementById('addForm');
+const categoriaSelect=document.getElementById('categoria');
+const salirAdmin=document.getElementById('salirAdmin');
+const loteCadFields=document.getElementById('loteCadFields');
+const tablaGeneral=document.getElementById('tablaGeneralCompleta').querySelector('tbody');
+const tablaAntibioticos=document.getElementById('tablaAntibioticos').querySelector('tbody');
+const tablaProveedores=document.getElementById('tablaProveedores').querySelector('tbody');
+let productosInventario = JSON.parse(localStorage.getItem('inventario')) || [];
+let productoEnEdicion = null;
+
+// Guardar producto
+function guardarProductoLocal(producto){
+  if(productoEnEdicion){
+    const index = productosInventario.findIndex(p=>p.codigo===productoEnEdicion.codigo);
+    productosInventario[index] = producto;
+    productoEnEdicion = null;
+  }else{
+    productosInventario.push(producto);
+  }
+  localStorage.setItem('inventario', JSON.stringify(productosInventario));
+  renderTablasInventario();
+}
+
+// Eliminar producto
+function eliminarProductoLocal(codigo){
+  productosInventario = productosInventario.filter(p=>p.codigo!==codigo);
+  localStorage.setItem('inventario', JSON.stringify(productosInventario));
+  renderTablasInventario();
+}
+
+// Renderizado
+function renderTablasInventario(){
+  tablaGeneral.innerHTML = '';
+  tablaAntibioticos.innerHTML = '';
+  tablaProveedores.innerHTML = '';
+
+  productosInventario.forEach(p=>{
+    // Solo General y Antibióticos (sin proveedores)
+    if(p.categoria!=='Proveedores'){
+      const row = document.createElement('tr');
+      row.innerHTML=`
+        <td>${p.nombre||"ND"}</td>
+        <td>${p.codigo||"ND"}</td>
+        <td>${p.precio?`$${p.precio}`:"ND"}</td>
+        <td>${p.categoria==='Antibiótico' ? (p.lote||"ND") : "ND"}</td>
+        <td class="${getStockClass(p.stock,p.stockMin)}">${p.stock||"ND"}</td>
+        <td class="stockmin-rojo">${p.stockMin||"ND"}</td>
+        <td class="entradas-azul">${p.entradas||"ND"}</td>
+        <td class="${getCategoriaClass(p.categoria)}">${p.categoria||"ND"}</td>
+        <td class="${p.categoria==='Antibiótico' ? getCaducidadClass(p.caducidad) : ''}">${p.categoria==='Antibiótico' ? (p.caducidad||"ND") : "ND"}</td>
+        <td>${userType==='admin'
+            ?`<button class="btn btn-edit" onclick='editarProducto(${JSON.stringify(p)})'>✏️</button>
+               <button class="btn btn-del" onclick='eliminarProductoLocal("${p.codigo}")'>🗑️</button>` 
+            :''}</td>
+      `;
+      tablaGeneral.appendChild(row);
+      if(p.categoria==='Antibiótico') tablaAntibioticos.appendChild(row.cloneNode(true));
+    } else {
+      // Solo proveedores
+      const row = document.createElement('tr');
+      row.innerHTML=`
+        <td>${p.nombre||"ND"}</td>
+        <td>${p.codigo||"ND"}</td>
+        <td class="${getCategoriaClass(p.categoria)}">${p.categoria||"ND"}</td>
+        <td>${userType==='admin'
+            ?`<button class="btn btn-edit" onclick='editarProducto(${JSON.stringify(p)})'>✏️</button>
+               <button class="btn btn-del" onclick='eliminarProductoLocal("${p.codigo}")'>🗑️</button>` 
+            :''}</td>
+      `;
+      tablaProveedores.appendChild(row);
+    }
+  });
+}
+
+// --- Clases ---
+function getStockClass(stock, min){if(stock<=min+10) return 'stock-rojo'; if(stock>min+10 && stock<=min+20) return 'stock-amarillo'; return 'stock-verde';}
+function getCaducidadClass(fechaCad){if(!fechaCad) return ''; const hoy=new Date(); const cad=new Date(fechaCad); const diff=(cad-hoy)/(1000*60*60*24); if(diff<=20) return 'cad-rojo'; if(diff>20 && diff<=50) return 'cad-amarillo'; return 'cad-verde';}
+function getCategoriaClass(cat){
+  switch(cat){
+    case 'Farmacia':return 'categoria-farmacia';
+    case 'Tienda':return 'categoria-tienda';
+    case 'Antibiótico':return 'categoria-antibiotico';
+    case 'Papelería':return 'categoria-papeleria';
+    case 'Proveedores':return 'categoria-proveedores';
+    case 'Bebés':return 'categoria-bebes';
+    case 'Tecnología':return 'categoria-tecnologia';
+    case 'Accesorios':return 'categoria-accesorios';
+    default:return '';
+  }
+}
+
+// Agregar producto
+addForm.addEventListener('submit', e=>{
+    e.preventDefault(); 
+    const p = {
+        nombre: document.getElementById('nombre').value,
+        codigo: document.getElementById('codigo').value,
+        precio: parseFloat(document.getElementById('precio').value)||0,
+        lote: document.getElementById('lote').value,
+        caducidad: document.getElementById('caducidad').value,
+        stock: parseInt(document.getElementById('stock').value)||0,
+        stockMin: parseInt(document.getElementById('stockMin').value)||0,
+        entradas: parseInt(document.getElementById('entradas').value)||0,
+        categoria: document.getElementById('categoria').value
+    };
+    guardarProductoLocal(p);
+    addForm.reset();
+});
+
+// Mostrar/ocultar campos lote/caducidad
+categoriaSelect.addEventListener('change',()=>{
+    loteCadFields.style.display = categoriaSelect.value==='Antibiótico' ? 'block' : 'none';
+});
+
+// Editar producto
+function editarProducto(p){
+  productoEnEdicion = p;
+  document.getElementById('nombre').value=p.nombre;
+  document.getElementById('codigo').value=p.codigo;
+  document.getElementById('precio').value=p.precio;
+  document.getElementById('lote').value=p.lote;
+  document.getElementById('caducidad').value=p.caducidad;
+  document.getElementById('stock').value=p.stock;
+  document.getElementById('stockMin').value=p.stockMin;
+  document.getElementById('entradas').value=p.entradas;
+  document.getElementById('categoria').value=p.categoria;
+  loteCadFields.style.display=p.categoria==='Antibiótico' ? 'block' : 'none';
+  window.scrollTo(0,0);
+}
+
+// Realizar Corte
+document.getElementById("btnCorte").addEventListener("click", ()=>{
+  let total = 0;
+  productosInventario.forEach(p=>{
+    if(p.precio && p.stock){
+      total += p.precio * p.stock;
+    }
+  });
+  alert("💰 Corte realizado\nReembolso Total: $" + total.toFixed(2));
+  // Guardar en historial
+  let cortes = JSON.parse(localStorage.getItem("cortes")) || [];
+  cortes.push({fecha:new Date().toLocaleString(), total:total});
+  localStorage.setItem("cortes", JSON.stringify(cortes));
+  // Reset dinero (simulación)
+  productosInventario.forEach(p=>{p.entradas = 0;});
+  localStorage.setItem("inventario", JSON.stringify(productosInventario));
+  renderTablasInventario();
+});
+
+// Render inicial
+renderTablasInventario();
+
+// Admin login
+adminBtn.addEventListener('click',()=>{loginSection.classList.toggle('oculto');});
+salirAdmin.addEventListener('click',()=>{adminSection.classList.add('oculto'); loginSection.classList.add('oculto'); userType='cajero'; renderTablasInventario();});
+loginForm.addEventListener('submit', e=>{
+  e.preventDefault();
+  const pass = document.getElementById('adminPass').value;
+  if(pass==='Mariposa'){
+      userType='admin'; // 🔑 clave
+      adminSection.classList.remove('oculto'); 
+      loginSection.classList.add('oculto'); 
+      renderTablasInventario();
+  }
+  else{alert("Contraseña incorrecta");}
+});
+
+// Logout
+document.getElementById('logout').addEventListener('click',()=>{localStorage.removeItem('usuarioActivo'); location.reload();});
+</script>
+</body>
+</html>

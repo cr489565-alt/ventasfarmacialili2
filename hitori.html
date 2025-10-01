@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>📜 Historial - Farmacia Ortopedia Lili</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+<style>
+body { font-family: system-ui, sans-serif; background:#1e2f52; color:#e5e7eb; margin:0; padding:0;}
+header { background:#111827; padding:16px; font-size:30px; font-weight:bold; text-align:center; position:relative;}
+header img { position:absolute; left:10px; top:50%; transform:translateY(-50%); width:150px; height:100px; border-radius:25px;}
+main { padding:16px; display:grid; gap:24px;}
+section { background:linear-gradient(120deg,#111827 80%,#2563eb11 100%); padding:16px; border-radius:16px; box-shadow:0 0 22px rgba(0,0,0,.3);}
+h2 { margin-top:0; color:#60a5fa; letter-spacing:1px;}
+.table-container { width:100%; overflow-x:auto; margin-top:12px; }
+table { width:100%; border-collapse: collapse; font-size:0.97em;}
+th, td { border:1px solid #374151; padding:8px; text-align:left;}
+th { background:#1f2937; }
+tfoot td { font-weight:bold; background:#1f2937; }
+button { padding:7px 13px; border:none; border-radius:7px; cursor:pointer; background:#2563eb; color:white; margin-top:8px; box-shadow:0 2px 4px #2563eb38;}
+button.reimprimir { background:#f59e0b; }
+button.realizar-corte { background:#16a34a; box-shadow:0 2px 6px #16a34a38;}
+button.reembolso { background:#ef4444; box-shadow:0 2px 6px #ef4444a0; }
+.main-menu { display:flex; gap:12px; background:#111827; padding:10px 16px; position:sticky; top:0; z-index:1000; border-bottom:1px solid #1f2937;}
+.main-menu .menu-link {color:#e5e7eb; text-decoration:none; padding:8px 12px; border-radius:8px; font-weight:500; transition:0.2s;}
+.main-menu .menu-link:hover {background:#1f2937;}
+.main-menu .menu-link.active {background:#2563eb; color:white;}
+#logout{background:#dc2626;margin-left:auto;padding:8px 12px;border-radius:8px;color:white;border:none;cursor:pointer;transition:0.2s;}
+#logout:hover{background:#b91c1c;}
+#cajero{font-size:14px;margin-left:16px;color:#facc15;}
+.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#00000088; justify-content:center; align-items:center; z-index:10000;}
+.modal-content { background:#1e2f52; padding:20px; border-radius:12px; width:520px; color:#e5e7eb; max-height:90vh; overflow-y:auto;}
+.modal-content input { width:90px; margin-left:10px; margin-bottom:6px; }
+.modal-content label { display:flex; justify-content:space-between; margin-bottom:6px; align-items:center; }
+.total-row { font-weight:bold; margin-top:10px; }
+.red-row { background-color:#f87171 !important; }
+</style>
+</head>
+<body>
+<header>  <img src="ventas.png" alt="Logo Ventas"> 
+  📜 Historial - Farmacia Ortopedia Lili</header>
+<nav class="main-menu">
+  <a href="ven.html" class="menu-link">💳 Ventas</a>
+  <a href="inven.html" class="menu-link">📦 Inventario</a>
+  <a href="hitori.html" class="menu-link active">📜 Historial</a>
+  <span id="cajero"></span>
+  <button id="logout">Cerrar Sesión</button>
+</nav>
+<main>
+  <section>
+    <h2>💵 Ventas Generales</h2>
+    <div class="table-container">
+      <table id="tabla-ventas-general">
+        <thead>
+          <tr><th>Producto</th><th>Código</th><th>Cantidad</th><th>Folio</th><th>Fecha</th><th>Cajero</th><th>Método</th><th>Subtotal</th></tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot>
+          <tr><td colspan="7">Total General</td><td id="total-general">$0.00</td></tr>
+        </tfoot>
+      </table>
+      <button onclick="descargarPDF('tabla-ventas-general','Ventas_General')">📄 PDF Ventas</button>
+      <button class="reembolso" onclick="abrirModalReembolso()">💸 Reembolso</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>💼 Proveedores</h2>
+    <div class="table-container">
+      <table id="tabla-proveedores">
+        <thead>
+          <tr><th>Nombre</th><th>Código</th><th>Folio Venta</th><th>Folio Proveedor</th><th>Método</th><th>Total</th></tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot>
+          <tr><td colspan="5">Total Proveedores</td><td id="total-proveedores">$0.00</td></tr>
+        </tfoot>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>💊 Ventas Antibióticos</h2>
+    <div class="table-container">
+      <table id="tabla-antibioticos">
+        <thead>
+          <tr>
+            <th>Producto</th><th>Código</th><th>Cantidad</th><th>Folio</th><th>Doctor</th><th>Cédula</th><th>Dirección</th><th>Receta</th><th>Lote</th>
+            <th>Fecha</th><th>Cajero</th><th>Método</th><th>Subtotal</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot>
+          <tr><td colspan="12">Total Antibióticos</td><td id="total-antibioticos">$0.00</td></tr>
+        </tfoot>
+      </table>
+      <button onclick="descargarPDF('tabla-antibioticos','Antibioticos')">📄 PDF Antibióticos</button>
+      <button class="realizar-corte" onclick="abrirModalCorte()">💾 Realizar Corte</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>📊 Historial de Cortes</h2>
+    <table id="tablaCortes">
+      <thead>
+        <tr><th>Fecha</th><th>Cajero</th><th>Efectivo</th><th>Tarjeta</th><th>Transferencia</th><th>Proveedor</th><th>Total Neto</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+</main>
+
+<!-- Modal Corte -->
+<div class="modal" id="modalCorte">
+  <div class="modal-content">
+    <h3>💵 Corte Diario</h3>
+    <div id="billetesMonedas">
+      <label>💵  1000: Billete X<input type="number" class="billete" data-valor="1000" value="0"></label>
+      <label>💵  500: Billete X<input type="number" class="billete" data-valor="500" value="0"></label>
+      <label>💵  200: Billete X<input type="number" class="billete" data-valor="200" value="0"></label>
+      <label>💵  100: Billete X<input type="number" class="billete" data-valor="100" value="0"></label>
+      <label>💵  50: Billete X<input type="number" class="billete" data-valor="50" value="0"></label>
+      <label>💵  20: Billete X<input type="number" class="billete" data-valor="20" value="0"></label>
+      <label>🪙 10: Moneda X<input type="number" class="billete" data-valor="10" value="0"></label>
+      <label>🪙 5: Moneda X<input type="number" class="billete" data-valor="5" value="0"></label>
+      <label>🪙 2: Moneda X<input type="number" class="billete" data-valor="2" value="0"></label>
+      <label>🪙 1: Moneda X<input type="number" class="billete" data-valor="1" value="0"></label>
+      <label>🪙 0.50: Moneda X<input type="number" class="billete" data-valor="0.5" value="0"></label>
+    </div>
+    <div class="total-row">Total Efectivo: <span id="totalEfectivo">0</span></div>
+    <label>Tarjeta: <input type="number" id="totalTarjeta" value="0" min="0"></label>
+    <label>Transferencia: <input type="number" id="totalTransferencia" value="0" min="0"></label>
+    <label>Proveedor: <input type="number" id="totalProveedor" value="0" min="0" readonly></label>
+    <div class="total-row">Total General: <span id="totalGeneralCorte">0</span></div>
+    <button class="realizar-corte" onclick="finalizarCorte()">✅ Finalizar Corte</button>
+    <button onclick="cerrarModalCorte()">❌ Cerrar</button>
+  </div>
+</div>
+
+<!-- Modal Reembolso -->
+<div class="modal" id="modalReembolso">
+  <div class="modal-content">
+    <h3>💸 Reembolso</h3>
+    <label>Folio Venta: <input type="text" id="folioReembolso"></label>
+    <label>Productos (códigos separados por coma): <input type="text" id="productosReembolso"></label>
+    <label>Contraseña Admin: <input type="password" id="passAdminReembolso"></label>
+    <div class="total-row" id="mensaje-error-reembolso" style="color:#f87171; display:none;">Contraseña incorrecta o datos invalidos.</div>
+    <button onclick="realizarReembolso()">💰 Realizar</button>
+    <button onclick="cerrarModalReembolso()">❌ Cerrar</button>
+  </div>
+</div>
+
+<script>
+let usuarioActivo = localStorage.getItem("usuarioActivo");
+const passAdmin = localStorage.getItem("passwordAdmin")||"admin123";
+if(!usuarioActivo){ window.location.href="index.html"; }
+else { document.getElementById("cajero").textContent = "👤 Cajero: "+usuarioActivo; }
+
+function cargarVentas(){ return JSON.parse(localStorage.getItem("ventas")||"[]"); }
+function formatDinero(num){ return "$"+(num||0).toFixed(2); }
+
+function colorearMetodo(td, metodo){
+  if(!td) return;
+  metodo = metodo.toLowerCase();
+  if(metodo==="efectivo") td.style.backgroundColor="#16a34a";
+  else if(metodo==="tarjeta") td.style.backgroundColor="#f59e0b";
+  else if(metodo==="transferencia") td.style.backgroundColor="#2563eb";
+  else if(metodo==="proveedor") td.style.backgroundColor="#ef4444";
+}
+
+function colorearMetodoCorte(td, metodo){
+  if(!td) return;
+  metodo = metodo.toLowerCase();
+  if(metodo==="efectivo") td.style.backgroundColor="#16a34a";
+  else if(metodo==="tarjeta") td.style.backgroundColor="#f59e0b";
+  else if(metodo==="transferencia") td.style.backgroundColor="#2563eb";
+  else if(metodo==="proveedor") td.style.backgroundColor="#ef4444";
+}
+
+function renderVentas(){
+  const ventas = cargarVentas();
+  const tbodyGeneral=document.querySelector('#tabla-ventas-general tbody');
+  const tbodyAnt=document.querySelector('#tabla-antibioticos tbody');
+  const tbodyProveedores=document.querySelector('#tabla-proveedores tbody');
+  tbodyGeneral.innerHTML=''; tbodyAnt.innerHTML=''; tbodyProveedores.innerHTML='';
+  let totalG=0,totalA=0,totalP=0;
+
+  ventas.forEach(v=>{
+    (v.items||[]).forEach(item=>{
+      const subtotal=item.precio*item.cantidad;
+      // Proveedores
+      if(item.codigo.toString().toUpperCase().startsWith("PD") || v.metodo==="Proveedor"){
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td>${item.nombre}</td><td>${item.codigo}</td><td>${v.folio}</td><td>${v.folioProveedor||'-'}</td><td>${v.metodo}</td><td>${formatDinero(subtotal)}</td>`;
+        colorearMetodo(tr.children[4], v.metodo);
+        tbodyProveedores.appendChild(tr);
+        totalP+=subtotal; return;
+      }
+      // General
+      const trG=document.createElement('tr');
+      trG.innerHTML=`<td>${item.nombre}</td><td>${item.codigo}</td><td>${item.cantidad}</td><td>${v.folio}</td><td>${v.fecha}</td><td>${v.cajero}</td><td>${v.metodo}</td><td>${formatDinero(subtotal)}</td>`;
+      colorearMetodo(trG.children[6], v.metodo);
+      tbodyGeneral.appendChild(trG);
+      totalG+=subtotal;
+      // Antibióticos
+      if(item.codigo.toString().toUpperCase().startsWith("A")){
+        const trA=document.createElement('tr');
+        trA.innerHTML=`<td>${item.nombre}</td><td>${item.codigo}</td><td>${item.cantidad}</td><td>${v.folio}</td><td>${v.doctor?.nombre||'-'}</td><td>${v.doctor?.cedula||'-'}</td><td>${v.doctor?.direccion||'-'}</td><td>${v.doctor?.folioReceta||'-'}</td><td>${item.lote||'-'}</td><td>${v.fecha}</td><td>${v.cajero}</td><td>${v.metodo}</td><td>${formatDinero(subtotal)}</td>`;
+        colorearMetodo(trA.children[11], v.metodo);
+        tbodyAnt.appendChild(trA);
+        totalA+=subtotal;
+      }
+    });
+  });
+
+  document.getElementById('total-general').textContent=formatDinero(totalG);
+  document.getElementById('total-antibioticos').textContent=formatDinero(totalA);
+  document.getElementById('total-proveedores').textContent=formatDinero(totalP);
+
+  const totalTarjeta = ventas.reduce((sum,v)=>sum+((v.metodo==="Tarjeta")?v.items.reduce((s,it)=>s+it.precio*it.cantidad,0):0),0);
+  const totalTrans = ventas.reduce((sum,v)=>sum+((v.metodo==="Transferencia")?v.items.reduce((s,it)=>s+it.precio*it.cantidad,0):0),0);
+  const totalEfectivo = totalG - totalTarjeta - totalTrans - totalP;
+  document.getElementById('totalTarjeta').value = totalTarjeta.toFixed(2);
+  document.getElementById('totalTransferencia').value = totalTrans.toFixed(2);
+  document.getElementById('totalProveedor').value = totalP.toFixed(2);
+  calcularEfectivoBilletes(totalEfectivo);
+}
+
+function calcularEfectivoBilletes(total){
+  const billetes = document.querySelectorAll('.billete');
+  billetes.forEach(b => b.value = 0);
+  document.getElementById('totalEfectivo').textContent = total.toFixed(2);
+  actualizarTotalGeneral();
+  billetes.forEach(b => b.addEventListener('input',()=>{
+    let suma = 0;
+    billetes.forEach(x => suma += parseFloat(x.value||0)*parseFloat(x.dataset.valor));
+    document.getElementById('totalEfectivo').textContent = suma.toFixed(2);
+    actualizarTotalGeneral();
+  }));
+}
+
+function actualizarTotalGeneral(){
+  const efectivo = parseFloat(document.getElementById('totalEfectivo').textContent)||0;
+  const tarjeta = parseFloat(document.getElementById('totalTarjeta').value)||0;
+  const trans = parseFloat(document.getElementById('totalTransferencia').value)||0;
+  const prov = parseFloat(document.getElementById('totalProveedor').value)||0;
+  document.getElementById('totalGeneralCorte').textContent = (efectivo+tarjeta+trans-prov).toFixed(2);
+}
+
+function abrirModalCorte(){ document.getElementById('modalCorte').style.display='flex'; }
+function cerrarModalCorte(){ document.getElementById('modalCorte').style.display='none'; }
+
+function renderCortes(){
+  const cortes = JSON.parse(localStorage.getItem('cortes')||'[]');
+  const tbody=document.querySelector('#tablaCortes tbody'); tbody.innerHTML='';
+  cortes.forEach(c=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td>${c.fecha}</td>
+      <td>${c.cajero}</td>
+      <td>${formatDinero(c.efectivo)}</td>
+      <td>${formatDinero(c.tarjeta)}</td>
+      <td>${formatDinero(c.transferencia)}</td>
+      <td>${formatDinero(c.proveedor)}</td>
+      <td>${formatDinero(c.total)}</td>
+    `;
+    colorearMetodoCorte(tr.children[2],'Efectivo');
+    colorearMetodoCorte(tr.children[3],'Tarjeta');
+    colorearMetodoCorte(tr.children[4],'Transferencia');
+    colorearMetodoCorte(tr.children[5],'Proveedor');
+    tbody.appendChild(tr);
+  });
+}
+
+// Función para generar PDF de cualquier tabla
+function descargarPDF(idTabla, nombreArchivo){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.autoTable({ html: '#'+idTabla });
+  doc.save(nombreArchivo+'.pdf');
+}
+
+// Generar PDFs de todas las tablas
+function descargarPDFsCorte(){
+  descargarPDF('tabla-ventas-general','Ventas_General');
+  descargarPDF('tabla-antibioticos','Antibioticos');
+  descargarPDF('tabla-proveedores','Proveedores');
+}
+
+function finalizarCorte(){
+  const efectivo = parseFloat(document.getElementById('totalEfectivo').textContent)||0;
+  const tarjeta = parseFloat(document.getElementById('totalTarjeta').value)||0;
+  const trans = parseFloat(document.getElementById('totalTransferencia').value)||0;
+  const prov = parseFloat(document.getElementById('totalProveedor').value)||0;
+  const total = efectivo + tarjeta + trans - prov; 
+  const cortes = JSON.parse(localStorage.getItem('cortes')||'[]');
+  cortes.push({fecha:new Date().toLocaleString(), cajero:usuarioActivo, efectivo, tarjeta, transferencia:trans, proveedor:prov, total});
+  localStorage.setItem('cortes', JSON.stringify(cortes));
+  localStorage.setItem('ventas','[]');
+  renderVentas(); renderCortes(); cerrarModalCorte();
+  
+  // Generar PDFs
+  descargarPDFsCorte();
+  
+  // Imprimir ticket
+  imprimirTicket({efectivo, tarjeta, transferencia:trans, proveedor:prov, total});
+}
+
+function imprimirTicket(data){
+  const contenido = `
+    <div style="font-family:monospace; width:280px; padding:10px;">
+      <h3 style="text-align:center;">*** FARMACIA ORTOPEDIA LILI ***</h3>
+      <p>Cajero: ${usuarioActivo}<br>
+      Fecha: ${new Date().toLocaleString()}</p>
+      <hr>
+      <p>Efectivo: ${formatDinero(data.efectivo)}<br>
+      Tarjeta: ${formatDinero(data.tarjeta)}<br>
+      Transferencia: ${formatDinero(data.transferencia)}<br>
+      Proveedor: ${formatDinero(data.proveedor)}</p>
+      <hr>
+      <p style="font-weight:bold;">TOTAL NETO: ${formatDinero(data.total)}</p><br>
+      <p style="center" >============================<br> ✦✦✦✦✦✦✦✦ Firma ✦✦✦✦✦✦✦✦</p>
+    </div>
+  `;
+  const ventana = window.open('', 'PRINT', 'height=400,width=300');
+  ventana.document.write(contenido);
+  ventana.document.close();
+  ventana.focus();
+  ventana.print();
+  ventana.close();
+}
+
+function abrirModalReembolso(){ document.getElementById('modalReembolso').style.display='flex'; }
+function cerrarModalReembolso(){ document.getElementById('modalReembolso').style.display='none'; }
+function realizarReembolso(){
+  const folio = document.getElementById('folioReembolso').value;
+  const productos = document.getElementById('productosReembolso').value.split(',');
+  const pass = document.getElementById('passAdminReembolso').value;
+  const error = document.getElementById('mensaje-error-reembolso');
+  if(pass!==passAdmin){ error.style.display='block'; return; }
+  const ventas = cargarVentas();
+  const venta = ventas.find(v=>v.folio==folio);
+  if(!venta){ error.style.display='block'; return; }
+  venta.items = venta.items.filter(i=>!productos.includes(i.codigo.toString()));
+  localStorage.setItem('ventas', JSON.stringify(ventas));
+  renderVentas(); cerrarModalReembolso();
+}
+
+document.getElementById('logout').addEventListener('click',()=>{
+  localStorage.removeItem('usuarioActivo'); window.location.href="index.html";
+});
+
+renderVentas(); renderCortes();
+</script>
+</body>
+</html>

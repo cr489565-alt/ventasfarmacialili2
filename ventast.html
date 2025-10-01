@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💳 Ventas - Tienda Lili 💳</title>
+
+<!-- Librerías PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    color: #fff;
+}
+
+/* HEADER */
+header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background: #1e3a8a;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+}
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.header-left img {
+    width: 100px;
+    height: 100px;
+    border-radius: 10px;
+}
+.header-left h1 {
+    margin: 0;
+    font-size: 20px;
+    color: #00f6ff;
+}
+
+/* NAV */
+nav {
+    position: fixed;
+    top: 120px;
+    width: 98%;
+    background-color:#1e3a8a;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    z-index: 999;
+}
+nav .nav-left, nav .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+nav button {
+    background: #fff;
+    color: #1e3a8a;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+nav button:hover {
+    background:#525a66; 
+    color:#fff;
+}
+button.logout { background:#dc2626; color:#fff; }
+#usuarioActivo {
+    font-weight: bold;
+    color: #fff;
+    background: #0f172a;
+    padding: 6px 12px;
+    border-radius: 6px;
+}
+
+/* CONTENEDOR */
+.container {
+    margin: 200px auto 50px auto; /* Ajuste para header + nav */
+    background: rgba(0, 0, 50, 0.4);
+    padding: 20px;
+    max-width: 1200px;
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+h2 {
+    text-align: center;
+    color: #00f6ff;
+    text-shadow: 0 0 10px #00f6ff;
+    margin-bottom: 15px;
+}
+
+/* TABLA VENTAS */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    background: rgba(0,123,255,0.2);
+    border-radius: 8px;
+    overflow: hidden;
+    table-layout: fixed;
+}
+th, td {
+    padding: 12px;
+    text-align: center;
+    border:1px solid #fff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+th {
+    background: #0056b3;
+    color: #fff;
+    text-transform: uppercase;
+}
+tr:nth-child(even) { background: rgba(255,255,255,0.05); }
+tfoot td {
+    font-weight: bold;
+    color: #00f6ff;
+    font-size: 16px;
+}
+
+/* SECCIÓN DE PAGO */
+.payment-section {
+    margin-top: 25px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+}
+.payment-section label {
+    font-weight: bold;
+    color: #00f6ff;
+}
+.payment-section input, .payment-section select {
+    padding: 8px;
+    border-radius: 6px;
+    border: none;
+    outline: none;
+}
+button#cobrar {
+    background: #00f6ff;
+    color: #1e3a8a;
+    font-weight: bold;
+    border-radius: 10px;
+    padding: 12px 25px;
+    margin-top: 20px;
+    cursor: pointer;
+    border: none;
+    transition: 0.3s;
+}
+button#cobrar:hover {
+    background: #00bcd4;
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER Y NAV -->
+<header>
+    <div class="header-left">
+        <img src="tienda.jpg" alt="Logo Tienda Lili">
+        <h1>💳 Ventas - Tienda Lili 💳</h1>
+    </div>
+</header>
+
+<nav>
+    <div class="nav-left">
+        <button onclick="location.href='ventast.html'">💳 Ventas</button>
+        <button onclick="location.href='inventienda.html'">📦 Inventario</button>
+        <button onclick="location.href='tiendah.html'">📜 Historial</button>
+        <span id="usuarioActivo">👤 Cajero: </span>
+    </div>
+    <div class="nav-right">
+        <button class="logout" onclick="cerrarSesion()">Cerrar Sesión</button>
+    </div>
+</nav>
+
+<div class="container">
+    <h2>Ventas</h2>
+    <input type="text" id="scanner" placeholder="Escanea el código de producto" autofocus style="width:100%; padding:10px; border-radius:6px; border:none; margin-bottom:10px;">
+
+    <table id="tablaVentas">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Código</th>
+                <th>Cantidad</th>
+                <th>Precio</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot>
+            <tr>
+                <td colspan="4">Total</td>
+                <td id="totalGeneral">0</td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div class="payment-section">
+        <div>
+            <label for="monto">Monto</label>
+            <input type="number" id="monto" disabled>
+        </div>
+        <div>
+            <label for="recibido">Recibido</label>
+            <input type="number" id="recibido">
+        </div>
+        <div>
+            <label for="cambio">Cambio</label>
+            <input type="number" id="cambio" disabled>
+        </div>
+        <div>
+            <label for="metodo">Método de Pago</label>
+            <select id="metodo">
+                <option value="efectivo">Efectivo</option>
+                <option value="tarjeta">Tarjeta</option>
+                <option value="transferencia">Transferencia</option>
+                <option value="proveedor">Proveedor</option>
+            </select>
+        </div>
+    </div>
+
+    <button id="cobrar" onclick="cobrarVenta()">💳 Cobrar</button>
+</div>
+
+<script>
+// Usuario activo
+let usuario = localStorage.getItem('usuarioActivo') || 'Admin';
+document.getElementById('usuarioActivo').textContent = `👤 Cajero: ${usuario}`;
+
+// Cerrar sesión
+function cerrarSesion(){
+    localStorage.removeItem('usuarioActivo');
+    window.location.href = 'index.html';
+}
+
+// Inventario global
+let inventario = JSON.parse(localStorage.getItem('inventario')) || [
+    {codigo:'001', nombre:'Producto A', precio:50, cantidad:100},
+    {codigo:'002', nombre:'Producto B', precio:30, cantidad:50},
+    {codigo:'003', nombre:'Producto C', precio:20, cantidad:200},
+];
+
+// Ventas actuales
+let ventas = [];
+
+// Agregar producto
+function agregarProducto(codigo){
+    let prod = inventario.find(p => p.codigo === codigo);
+    if(!prod) return alert('Producto no encontrado');
+    if(prod.cantidad <= 0) return alert('Sin stock disponible');
+
+    let ventaExistente = ventas.find(v => v.codigo === codigo);
+    if(ventaExistente){
+        if(prod.cantidad > ventaExistente.cantidad){
+            ventaExistente.cantidad += 1;
+            ventaExistente.total = ventaExistente.cantidad * ventaExistente.precio;
+        } else {
+            alert('Stock insuficiente');
+        }
+    } else {
+        ventas.push({
+            nombre: prod.nombre,
+            codigo: prod.codigo,
+            cantidad: 1,
+            precio: prod.precio,
+            total: prod.precio
+        });
+    }
+    mostrarVentas();
+}
+
+// Mostrar ventas
+function mostrarVentas(){
+    const tbody = document.querySelector('#tablaVentas tbody');
+    tbody.innerHTML = '';
+    let total = 0;
+    ventas.forEach((v,i)=>{
+        const fila = document.createElement('tr');
+        fila.innerHTML = `
+            <td>${v.nombre}</td>
+            <td>${v.codigo}</td>
+            <td><input type="number" min="1" max="${inventario.find(p => p.codigo === v.codigo).cantidad}" value="${v.cantidad}" onchange="editarCantidad(${i}, this.value)"></td>
+            <td>${v.precio.toFixed(2)}</td>
+            <td>${v.total.toFixed(2)}</td>
+        `;
+        tbody.appendChild(fila);
+        total += v.total;
+    });
+    document.getElementById('totalGeneral').textContent = total.toFixed(2);
+    document.getElementById('monto').value = total.toFixed(2);
+}
+
+// Editar cantidad
+function editarCantidad(index, cantidad){
+    cantidad = parseInt(cantidad) || 1;
+    let stock = inventario.find(p => p.codigo === ventas[index].codigo).cantidad;
+    if(cantidad > stock){
+        alert('Stock insuficiente');
+        cantidad = stock;
+    }
+    ventas[index].cantidad = cantidad;
+    ventas[index].total = cantidad * ventas[index].precio;
+    mostrarVentas();
+}
+
+// Escáner
+document.getElementById('scanner').addEventListener('keypress', function(e){
+    if(e.key === 'Enter'){
+        let codigo = this.value.trim();
+        agregarProducto(codigo);
+        this.value = '';
+    }
+});
+
+// Cambio automático
+document.getElementById('recibido').addEventListener('input', () => {
+    const recibido = parseFloat(document.getElementById('recibido').value) || 0;
+    const total = parseFloat(document.getElementById('monto').value) || 0;
+    document.getElementById('cambio').value = (recibido - total).toFixed(2);
+});
+
+// Cobrar venta
+function cobrarVenta(){
+    if(ventas.length === 0) return alert('No hay productos en la venta.');
+
+    const total = parseFloat(document.getElementById('monto').value).toFixed(2);
+    const recibido = parseFloat(document.getElementById('recibido').value).toFixed(2);
+    const cambio = parseFloat(document.getElementById('cambio').value).toFixed(2);
+    const metodo = document.getElementById('metodo').value;
+
+    // Actualizar inventario
+    ventas.forEach(v => {
+        let prod = inventario.find(p => p.codigo === v.codigo);
+        if(prod){
+            prod.cantidad -= v.cantidad;
+        }
+    });
+    localStorage.setItem('inventario', JSON.stringify(inventario));
+
+    // Guardar en historial
+    let historial = JSON.parse(localStorage.getItem('historial')) || [];
+    let folio = historial.length + 1;
+    let fecha = new Date().toLocaleString();
+    ventas.forEach(v=>{
+        historial.push({
+            folio,
+            usuario,
+            fecha,
+            nombre:v.nombre,
+            codigo:v.codigo,
+            cantidad:v.cantidad,
+            precio:v.precio,
+            total:v.total,
+            metodo
+        });
+    });
+    localStorage.setItem('historial', JSON.stringify(historial));
+
+    // Generar ticket PDF
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text("💳 Tienda Lili 💳", 20, 20);
+    doc.setFontSize(12);
+    doc.text(`Folio: ${folio}`, 20, 30);
+    doc.text(`Fecha: ${fecha}`, 20, 37);
+    doc.text(`Cajero: ${usuario}`, 20, 44);
+    doc.text(`Método: ${metodo}`, 20, 51);
+    doc.text("Productos:", 20, 60);
+
+    let y = 67;
+    ventas.forEach(v=>{
+        doc.text(`${v.nombre} | ${v.codigo} | x${v.cantidad} | $${v.precio.toFixed(2)} = $${v.total.toFixed(2)}`, 20, y);
+        y += 7;
+    });
+
+    doc.text(`TOTAL: $${total}`, 20, y+5);
+    doc.text(`Recibido: $${recibido}`, 20, y+12);
+    doc.text(`Cambio: $${cambio}`, 20, y+19);
+    doc.save(`Ticket_${folio}.pdf`);
+
+    // Limpiar venta
+    ventas = [];
+    mostrarVentas();
+    document.getElementById('recibido').value = '';
+    document.getElementById('cambio').value = '';
+}
+</script>
+
+</body>
+</html>

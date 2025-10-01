@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📦 Inventario - Tienda Lili 📦</title>
+
+<!-- Icono de la página -->
+<link rel="icon" type="image/png" href="icono.png">
+
+<!-- Librerías PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+<style>
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    color: #fff;
+}
+
+/* Encabezado principal */
+header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background: #1e3a8a;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+}
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.header-left img {
+    width: 100px;
+    height: 100px;
+    border-radius: 10px;
+}
+.header-left h1 {
+    margin: 0;
+    font-size: 20px;
+    color: #00f6ff;
+}
+
+/* Barra de navegación debajo del header */
+nav {
+    position: fixed;
+    top: 120px;
+    width: 98%;
+    background-color:#1e3a8a;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    z-index: 999;
+}
+nav .nav-left, nav .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+nav button, nav a {
+    background: #fff;
+    color: #1e3a8a;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+    text-decoration: none;
+}
+nav button:hover, nav a:hover {
+    background:#525a66; 
+    color:#fff;
+}
+button.logout { background:#dc2626; color:#fff; }
+
+/* Usuario activo */
+#usuarioActivo {
+    font-weight: bold;
+    color: #fff;
+    background: #0f172a;
+    padding: 6px 12px;
+    border-radius: 6px;
+}
+
+/* Contenedor principal */
+.container {
+    margin: 180px auto 50px auto; /* espacio para header + nav */
+    max-width: 1300px;
+    padding: 20px;
+    background: rgba(0, 0, 50, 0.4);
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+h2 {
+    text-align: center;
+    color:#00f6ff;
+    text-shadow:0 0 10px #00f6ff;
+    margin-bottom:20px;
+}
+
+/* Tabla de inventario */
+table {
+    width:100%;
+    border-collapse: collapse;
+    margin-top:20px;
+    background: rgba(0, 123, 255, 0.2);
+    border-radius: 8px;
+    overflow: hidden;
+}
+th, td {
+    padding:12px;
+    text-align:center;
+    border:1px solid #fff;
+}
+th { background:#0056b3; color:white; text-transform:uppercase; }
+tr:nth-child(even) { background: rgba(255,255,255,0.05); }
+
+/* Colores de stock */
+.stock-red { background:#ff0015; color:#fff; }
+.stock-yellow { background:#ffff00; color:#000; }
+.stock-orange { background:#ffc04c; color:#000; }
+.stock-green { background:#04dd37; color:#000; }
+
+/* Botones de tabla */
+button.edit { background:#ffc107; color:#000; }
+button.delete { background:#dc3545; color:#fff; }
+
+/* Panel admin */
+.admin-panel { 
+    display:none; 
+    margin-top:80px; 
+    background: rgba(255,255,255,0.1); 
+    padding:15px; 
+    border-radius:8px; 
+}
+input {
+    padding: 8px;
+    border-radius: 6px;
+    border: none;
+    width: 200px;
+}
+</style>
+</head>
+<body>
+
+<header>
+    <div class="header-left">
+        <img src="tienda.jpg" alt="Logo Tienda Lili">
+        <h1>📦 Inventario - Tienda Lili 📦</h1>
+    </div>
+</header>
+
+<nav>
+    <div class="nav-left">
+        <button onclick="location.href='ventast.html'">💳 Ventas</button>
+        <button onclick="location.href='inventienda.html'">📦 Inventario</button>
+        <button onclick="location.href='tiendah.html'">📜 Historial</button>
+         <span id="usuarioActivo">👤 Cajero: </span> 
+         <button onclick="toggleAdminPanel()">🔑 Admin</button>
+         <input type="text" id="buscador" placeholder="🔎 Buscar..." onkeyup="buscarProducto()">
+    </div>
+    <div class="nav-right">
+        <button class="logout" onclick="cerrarSesion()">Cerrar Sesión</button>
+    </div>
+</nav>
+<br>
+
+<div class="admin-panel" id="adminPanel">
+     <h2>👑 PANEL ADMINISTRACIÓN 👑</h2>
+     🔐 Ingresa Contraseña<br>
+     <input type="password" id="adminPass" placeholder="Contraseña Admin">
+     <button onclick="loginAdmin()">Ingresar</button>
+</div>
+
+<!-- Panel administrador -->
+<div class="admin-panel" id="formProducto">
+     <h2>⚙️ Panel Administrador</h2>
+     <form id="addForm" style="margin-top:1rem;">
+        <h3>➕ Agregar Producto</h3>
+        <input type="text" id="producto" placeholder="Nombre del producto">
+        <input type="text" id="codigo" placeholder="Código único">
+        <input type="number" id="precio" placeholder="Precio unitario">
+        <input type="number" id="stockCajas" placeholder="Stock por Cajas">
+        <input type="number" id="piezasPorCaja" placeholder="Piezas por Caja">
+        <input type="number" id="stockMinimo" placeholder="Stock Mínimo">
+        <button onclick="guardarProducto()">Guardar Producto</button>
+        <button onclick="imprimirPDF()">📄 Imprimir PDF</button>
+    </form>
+</div>
+
+<div class="container">
+    <h2>📦 Inventario - General 📦</h2>
+    <table id="tablaInventario">
+        <tr>
+            <th>Producto</th>
+            <th>Código</th>
+            <th>Precio</th>
+            <th>Stock por Cajas</th>
+            <th>Piezas por Caja</th>
+            <th>Stock por Piezas</th>
+            <th>Stock Mínimo</th>
+            <th>Acciones</th>
+        </tr>
+    </table>
+</div>
+
+<script>
+// --- Todo tu código JavaScript original sin cambios ---
+const CONTRASENA = "12345";
+let inventarioUnico = JSON.parse(localStorage.getItem('inventarioUnico')) || [];
+let editIndex = null;
+
+function mostrarUsuario(){
+    let usuario = localStorage.getItem("usuarioActivo") || "Invitado";
+    document.getElementById("usuarioActivo").textContent = "👤 Usuario: " + usuario;
+}
+
+function toggleAdminPanel(){
+    const panel = document.getElementById('adminPanel');
+    panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+}
+
+function loginAdmin(){
+    let pass = document.getElementById('adminPass').value;
+    if(pass === CONTRASENA){
+        document.getElementById('formProducto').style.display = "block";
+        document.getElementById('adminPanel').style.display = "none";
+        mostrarInventario(true);
+    } else alert("Contraseña incorrecta");
+}
+
+function mostrarInventario(isAdmin=false){
+    const tabla = document.getElementById('tablaInventario');
+    tabla.innerHTML = `<tr>
+        <th>Producto</th>
+        <th>Código</th>
+        <th>Precio</th>
+        <th>Stock por Cajas</th>
+        <th>Piezas por Caja</th>
+        <th>Stock por Piezas</th>
+        <th>Stock Mínimo</th>
+        <th>Acciones</th>
+    </tr>`;
+    inventarioUnico.forEach((prod,index)=>{
+        let stockPiezasTotal = prod.stockCajas * prod.piezasPorCaja;
+        let colorStock = '';
+        if(stockPiezasTotal < 10) colorStock='stock-red';
+        else if(stockPiezasTotal >= 10 && stockPiezasTotal < 20) colorStock='stock-yellow';
+        else if(stockPiezasTotal >= 20 && stockPiezasTotal < 40) colorStock='stock-orange';
+        else if(stockPiezasTotal >= 40) colorStock='stock-green';
+
+        tabla.innerHTML += `<tr>
+            <td>${prod.nombre}</td>
+            <td>${prod.codigo}</td>
+            <td>${prod.precio.toFixed(2)}</td>
+            <td>${prod.stockCajas}</td>
+            <td>${prod.piezasPorCaja}</td>
+            <td class="${colorStock}">${stockPiezasTotal}</td>
+            <td>${prod.stockMinimo}</td>
+            <td>${isAdmin?`<button class="edit" onclick="editarProducto(${index})">Editar</button>
+                         <button class="delete" onclick="eliminarProducto(${index})">Eliminar</button>`:'🔒 Lectura'}</td>
+        </tr>`;
+    });
+}
+
+function guardarProducto(){
+    const nombre = document.getElementById('producto').value.trim();
+    const codigo = document.getElementById('codigo').value.trim();
+    const precio = parseFloat(document.getElementById('precio').value);
+    const stockCajas = parseInt(document.getElementById('stockCajas').value);
+    const piezasPorCaja = parseInt(document.getElementById('piezasPorCaja').value);
+    const stockMinimo = parseInt(document.getElementById('stockMinimo').value);
+
+    if(!nombre || !codigo || isNaN(precio) || isNaN(stockCajas) || isNaN(piezasPorCaja) || isNaN(stockMinimo)){
+        return alert('Completa todos los campos correctamente.');
+    }
+
+    if(editIndex !== null){
+        inventarioUnico[editIndex] = {nombre,codigo,precio,stockCajas,piezasPorCaja,stockMinimo};
+        editIndex = null;
+    } else {
+        if(inventarioUnico.some(p => p.codigo === codigo)){
+            return alert('El código ya existe, ingresa uno diferente.');
+        }
+        inventarioUnico.push({nombre,codigo,precio,stockCajas,piezasPorCaja,stockMinimo});
+    }
+
+    localStorage.setItem('inventarioUnico', JSON.stringify(inventarioUnico));
+    mostrarInventario(true);
+    limpiarCampos();
+}
+
+function editarProducto(index){
+    const prod = inventarioUnico[index];
+    document.getElementById('producto').value = prod.nombre;
+    document.getElementById('codigo').value = prod.codigo;
+    document.getElementById('precio').value = prod.precio;
+    document.getElementById('stockCajas').value = prod.stockCajas;
+    document.getElementById('piezasPorCaja').value = prod.piezasPorCaja;
+    document.getElementById('stockMinimo').value = prod.stockMinimo;
+    editIndex = index;
+    document.getElementById('formProducto').style.display = "block";
+}
+
+function eliminarProducto(index){
+    if(confirm("¿Desea eliminar este producto?")){
+        inventarioUnico.splice(index,1);
+        localStorage.setItem('inventarioUnico', JSON.stringify(inventarioUnico));
+        mostrarInventario(true);
+    }
+}
+
+function limpiarCampos(){
+    document.getElementById('producto').value='';
+    document.getElementById('codigo').value='';
+    document.getElementById('precio').value='';
+    document.getElementById('stockCajas').value='';
+    document.getElementById('piezasPorCaja').value='';
+    document.getElementById('stockMinimo').value='';
+}
+
+function buscarProducto(){
+    const query = document.getElementById('buscador').value.toLowerCase();
+    const filas = document.querySelectorAll("#tablaInventario tr");
+    filas.forEach((fila,index)=>{
+        if(index===0) return; 
+        const nombre = fila.cells[0].textContent.toLowerCase();
+        fila.style.display = nombre.includes(query) ? "" : "none";
+    });
+}
+
+function cerrarSesion(){
+    localStorage.removeItem("usuarioActivo");
+    alert("Sesión cerrada.");
+    location.href="index.html";
+}
+
+function imprimirPDF(){
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.setFontSize(14);
+    doc.text("Inventario General - Ventas Lili", 20, 20);
+    let fecha = new Date();
+    doc.text("Fecha: "+fecha.toLocaleDateString()+" "+fecha.toLocaleTimeString(), 20, 30);
+
+    let columnas = ["Producto","Código","Precio","Stock Cajas","Piezas/Caja","Total Piezas","Stock Min","L","M","X","J","V","S","D"];
+    let filas = inventarioUnico.map(p => [  
+        p.nombre, p.codigo, p.precio.toFixed(2), p.stockCajas, p.piezasPorCaja, 
+        p.stockCajas*p.piezasPorCaja, p.stockMinimo,"","","","","","",""
+    ]);
+
+    doc.autoTable({ head:[columnas], body:filas, startY:40, theme:"grid"});
+    doc.save("inventario.pdf");
+}
+
+mostrarInventario(false);
+mostrarUsuario();
+</script>
+
+</body>
+</html>

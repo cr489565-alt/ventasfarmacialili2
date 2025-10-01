@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💳 Venta - Farmacia Ortopedia Lili</title>
+<style>
+*{box-sizing:border-box;}
+body{font-family:system-ui,sans-serif;background:#1e2f52;color:#e5e7eb;margin:0;padding:0;height:100vh;display:flex;flex-direction:column;}
+header{
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding-left:60px;
+    background:hsl(221, 39%, 11%);
+    padding:16px;
+    font-size:30px;
+    font-weight:bold;
+    text-align:center;
+}
+header img{
+    position:absolute;
+    left:10px;
+    top:50%;
+    transform:translateY(-50%);
+    width:150px;
+    height:100px;
+    border-radius:20px;
+}
+main{flex:1;padding:0;display:flex;flex-direction:column;}
+.card{
+  background:linear-gradient(120deg,#111827 80%,#2563eb11 100%);
+  border-radius:0;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  padding:16px;
+}
+input,button,select{padding:9px;border-radius:6px;border:none;margin:4px 0;}
+input,select{width:100%;}
+input[readonly]{background:#374151;color:#ccc;}
+button{background:#2563eb;color:white;cursor:pointer;font-weight:bold;}
+button:hover{background:#1d4ed8;}
+.tabla-contenedor{
+  flex:1;
+  overflow-y:auto;
+  margin-top:10px;
+  border:1px solid #374151;
+  border-radius:8px;
+  background:#0f172a;
+}
+table{width:100%;border-collapse:collapse;}
+th,td{padding:8px;border-bottom:1px solid #374151;text-align:left;}
+#clienteForm{display:none;margin-top:12px;background:#1f2937;padding:12px;border-radius:8px;display:flex;flex-wrap:wrap;gap:4px;}
+#clienteForm input{flex:1;}
+#folioProveedorDiv{display:none;margin-top:8px;}
+#pagoForm{margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;}
+#pagoForm input,#pagoForm select{flex:1;}
+#btnCobrar{margin-top:8px;background:#16a34a;}
+#btnNuevaVenta{margin-top:4px;background:#f59e0b;}
+.main-menu{display:flex;gap:12px;background:#111827;padding:10px 16px;position:sticky;top:0;z-index:1000;border-bottom:1px solid #1f2937;}
+.main-menu .menu-link{color:#e5e7eb;text-decoration:none;padding:8px 12px;border-radius:8px;font-weight:500;transition:0.2s;}
+.main-menu .menu-link:hover{background:#1f2937;}
+.main-menu .menu-link.active{background:#2563eb;color:white;}
+#logout{background:#dc2626;margin-left:auto;}
+#cajero{font-size:14px;margin-left:16px;color:#facc15;}
+</style>
+</head>
+<body>
+<header> 
+    <img src="ventas.png" alt="Logo Ventas">
+    💳 Venta - Farmacia Ortopedia Lili 💳
+</header>
+<nav class="main-menu">
+  <a href="ven.html" class="menu-link active">💳 Ventas</a>
+  <a href="inven.html" class="menu-link">📦 Inventario</a>
+  <a href="hitori.html" class="menu-link">📜 Historial</a>
+  <span id="cajero"></span>
+  <button id="logout">Cerrar Sesión</button>
+</nav>
+<main>
+  <div id="ventaCard" class="card" style="display:none;">
+    <h3>Vender producto</h3>
+    <input type="text" id="searchProducto" placeholder="Escanea o escribe código/nombre">
+    
+    <div class="tabla-contenedor">
+      <table id="tablaVenta">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Código</th>
+            <th>Cant.</th>
+            <th>Precio</th>
+            <th>Subtotal</th>
+            <th>Caducidad</th>
+            <th>Lote</th>
+            <th>Status</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    
+    <p id="totalVenta" style="font-weight:bold;margin-top:8px;">Total: $0.00</p>
+    
+    <div id="clienteForm">
+      <input type="text" id="clienteNombre" placeholder="Nombre del Doctor">
+      <input type="text" id="clienteCedula" placeholder="Cédula profesional" maxlength="8">
+      <input type="text" id="clienteDireccion" placeholder="Dirección">
+      <input type="text" id="folioReceta" placeholder="Folio de receta" maxlength="8">
+    </div>
+
+    <div id="folioProveedorDiv">
+      <input type="text" id="folioProveedor" placeholder="Folio del proveedor">
+    </div>
+    
+    <div id="pagoForm">
+      <input type="number" id="pagoInput" placeholder="Pago recibido" min="0">
+      <input type="text" id="cambioDisplay" placeholder="Cambio" readonly>
+      <select id="metodoPago">
+        <option value="Efectivo">Efectivo</option>
+        <option value="Tarjeta">Tarjeta</option>
+        <option value="Proveedores">Proveedores</option>
+        <option value="Transferencia">Transferencia</option>
+      </select>
+    </div>
+    
+    <button id="btnCobrar">Cobrar</button>
+  </div>
+</main>
+
+<script>
+// Usuario activo
+let usuarioActivo = localStorage.getItem("usuarioActivo");
+if(!usuarioActivo){ window.location.href="index.html"; }
+else { 
+  document.getElementById("cajero").textContent = "👤 Cajero: "+usuarioActivo; 
+  document.getElementById("ventaCard").style.display="flex"; 
+}
+
+// Inventario
+let inventario = JSON.parse(localStorage.getItem('inventario')) || [];
+localStorage.setItem('inventario', JSON.stringify(inventario));
+
+// Venta persistente
+let venta = JSON.parse(localStorage.getItem('ventaActiva')) || [];
+let folioCounter = parseInt(localStorage.getItem('folioCounter')||1);
+
+function guardarInventario(){ localStorage.setItem('inventario', JSON.stringify(inventario)); }
+function guardarVentas(ventaData){ 
+  const historial = JSON.parse(localStorage.getItem('ventas'))||[];
+  historial.push(ventaData);
+  localStorage.setItem('ventas', JSON.stringify(historial));
+}
+function guardarVentaActiva(){ localStorage.setItem('ventaActiva', JSON.stringify(venta)); }
+
+function renderVenta(){
+  const tbody = document.querySelector('#tablaVenta tbody');
+  tbody.innerHTML='';
+  let total=0;
+  let mostrarClienteForm = false;
+  let mostrarFolioProveedor = false;
+
+  venta.forEach((v,i)=>{
+    let subtotal = v.precio*v.cantidad;
+    total+=subtotal;
+    const diff = (new Date(v.caducidad) - new Date())/(1000*60*60*24);
+    let estatus = diff<0 ? "Caducado" : diff<=30 ? "Próximo" : "OK";
+    const esAntibiotico = v.codigo.toUpperCase().startsWith("A");
+    if(esAntibiotico) mostrarClienteForm = true;
+    if(v.categoria === "Proveedores") mostrarFolioProveedor = true;
+
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td><input type="text" value="${v.nombre}" readonly></td>
+      <td><input type="text" value="${v.codigo}" readonly></td>
+      <td><input type="number" value="${v.cantidad}" min="1" onchange="actualizarCantidad(${i},this.value)"></td>
+      <td><input type="number" value="${v.precio}" onchange="actualizarPrecio(${i},this.value)"></td>
+      <td><input type="text" value="${subtotal.toFixed(2)}" readonly></td>
+      <td><input type="text" value="${esAntibiotico ? v.caducidad : ''}" readonly></td>
+      <td><input type="text" value="${esAntibiotico ? v.lote : ''}" readonly></td>
+      <td><input type="text" value="${estatus}" readonly></td>
+      <td><button onclick="eliminarVenta(${i})">🗑️</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('totalVenta').textContent = "Total: $"+total.toFixed(2);
+  document.getElementById('clienteForm').style.display = mostrarClienteForm ? 'flex' : 'none';
+  document.getElementById('folioProveedorDiv').style.display = mostrarFolioProveedor ? 'flex' : 'none';
+  guardarVentaActiva();
+}
+
+function actualizarCantidad(index, value){
+  value = parseInt(value)||1;
+  venta[index].cantidad = value;
+  renderVenta();
+  actualizarCambio();
+}
+
+function actualizarPrecio(index, valor){
+  valor = parseFloat(valor)||0;
+  venta[index].precio = valor;
+  renderVenta();
+  actualizarCambio();
+}
+
+// Escáner
+document.getElementById('searchProducto').addEventListener('keydown', e=>{
+  if(e.key==='Enter'){ e.preventDefault(); agregarProducto(e.target.value); }
+});
+
+function agregarProducto(busqueda){
+  if(!busqueda) return;
+  const prod = inventario.find(p=>p.codigo.toLowerCase()===busqueda.toLowerCase()||p.nombre.toLowerCase()===busqueda.toLowerCase());
+  if(!prod) return alert("Producto no encontrado");
+  if(prod.categoria !== "Proveedores" && prod.stock<=0) return alert("Producto sin stock");
+  const yaExiste = venta.find(v=>v.codigo===prod.codigo);
+  if(yaExiste){
+    if(yaExiste.categoria !== "Proveedores" && yaExiste.cantidad+1 > prod.stock) return alert("No hay suficiente stock");
+    yaExiste.cantidad++;
+  } else {
+    venta.push({...prod, cantidad:1});
+  }
+  document.getElementById('searchProducto').value='';
+  renderVenta();
+  actualizarCambio();
+}
+
+function eliminarVenta(i){ venta.splice(i,1); renderVenta(); actualizarCambio(); }
+
+document.getElementById("logout").onclick=()=>{ 
+  localStorage.removeItem("usuarioActivo"); 
+  window.location.href="index.html"; 
+};
+
+function actualizarCambio(){
+  const total = venta.reduce((acc,v)=>acc+v.precio*v.cantidad,0);
+  const pago = parseFloat(document.getElementById('pagoInput').value)||0;
+  document.getElementById('cambioDisplay').value = pago>=total ? (pago-total).toFixed(2) : "0.00";
+}
+
+document.getElementById('pagoInput').addEventListener('input', actualizarCambio);
+
+// Cobrar
+document.getElementById("btnCobrar").onclick = () => {
+  if(venta.length === 0) return alert("No hay productos en la venta");
+
+  const contieneAntibiotico = venta.some(v=>v.codigo.toUpperCase().startsWith("A"));
+  const contieneProveedor = venta.some(v=>v.categoria==="Proveedores");
+
+  if(contieneAntibiotico){
+    const nombre=document.getElementById("clienteNombre").value.trim();
+    const cedula=document.getElementById("clienteCedula").value.trim();
+    const direccion=document.getElementById("clienteDireccion").value.trim();
+    const folio=document.getElementById("folioReceta").value.trim();
+    if(!nombre||!cedula||!direccion||!folio) return alert("Complete todos los campos del doctor");
+  }
+
+  if(contieneProveedor){
+    const folioProv=document.getElementById("folioProveedor").value.trim();
+    if(!folioProv) return alert("Ingrese folio del proveedor");
+  }
+
+  const metodoPago=document.getElementById("metodoPago").value;
+  const fecha=new Date().toLocaleString();
+  const total = venta.reduce((acc,v)=>acc+v.precio*v.cantidad,0);
+  const ventaData = {folio:folioCounter++, fecha, cajero:usuarioActivo, metodo:metodoPago, total, items:venta.map(v=>({nombre:v.nombre,codigo:v.codigo,cantidad:v.cantidad,precio:v.precio,lote:v.lote}))};
+  
+  if(contieneAntibiotico){
+    ventaData.doctor = {
+      nombre: document.getElementById("clienteNombre").value,
+      cedula: document.getElementById("clienteCedula").value,
+      direccion: document.getElementById("clienteDireccion").value,
+      folioReceta: document.getElementById("folioReceta").value
+    };
+  }
+
+  if(contieneProveedor){
+    ventaData.folioProveedor = document.getElementById("folioProveedor").value;
+  }
+
+  // Actualiza inventario solo si no es proveedor
+  venta.forEach(v=>{ 
+    if(v.categoria !== "Proveedores"){
+      const prod=inventario.find(p=>p.codigo===v.codigo); 
+      if(prod) prod.stock-=v.cantidad; 
+    }
+  });
+
+  guardarInventario();
+  guardarVentas(ventaData);
+  localStorage.setItem('folioCounter', folioCounter);
+
+  // Generar ticket
+  const ESC = "\x1B";
+  const GS  = "\x1D";
+  let ticket = "";
+
+  ticket += "****FARMACIA ORTOPEDIA LILI****\n";
+  ticket += "Farma-Copias,M-12,56589Zoquiapan,M\n";
+  ticket += "Tel: 55-1234-5678\n";
+  ticket += "********************************\n";
+
+  ticket += `Folio: ${ventaData.folio}\n`;
+  ticket += `Cajero: ${usuarioActivo}\n`;
+  ticket += `Fecha: ${fecha}\n`;
+  
+
+  if(contieneAntibiotico){
+    ticket += "******** RECETA MÉDICA ********\n";
+    ticket += `Dr: ${ventaData.doctor.nombre}\n`;
+    ticket += `Céd: ${ventaData.doctor.cedula}\n`;
+    ticket += `Dir: ${ventaData.doctor.direccion}\n`;
+    ticket += `Folio Receta: ${ventaData.doctor.folioReceta}\n`;
+    ticket += "********************************\n";
+  }
+
+  if(contieneProveedor){
+    ticket += "********** PROVEEDORES **********\n";
+    ticket += `Folio: ${ventaData.folioProveedor}\n`;
+    ticket += "********************************\n";
+  }
+
+  ticket +="Producto   Cód  Cant   Precio\n";
+ 
+          
+  venta.forEach(v=>{
+    if(v.codigo.toUpperCase().startsWith("A")){
+      ticket += `${v.nombre.substring(0,12).padEnd(12)} `;
+      ticket += `${v.codigo.padEnd(4)} `;
+      ticket += `${v.cantidad.toString().padEnd(3)} `;
+      ticket += `$${v.precio.toFixed(2)}\n`;
+      ticket += ` Lote:${v.lote} Cad:${v.caducidad}\n`;
+    } else {
+      ticket += `${v.nombre.substring(0,12).padEnd(12)} `;
+      ticket += `${v.codigo.padEnd(4)} `;
+      ticket += `${v.cantidad.toString().padEnd(3)} `;
+      ticket += `$${(v.precio*v.cantidad).toFixed(2)}\n`;
+    }
+  });
+
+  ticket += "********************************\n";
+  ticket +=  `TOTAL: $${total.toFixed(2)}\n` ;
+  ticket +=  `Método de Pago: ${metodoPago}\n`;
+  ticket += "\n✦✦✦ Gracias por su preferencia ✦✦✦\n";
+  ticket += "     ¡Que tenga un buen día!     \n";
+  ticket += "********************************\n";
+
+  ticket += "\x1B\x70\x00\x19\xFA"; 
+  const win = window.open('','Imprimir Ticket','width=100,height=600');
+  win.document.write('<pre style="font-family:monospace;">'+ticket+'</pre>');
+  win.print();
+  win.close();
+
+  venta=[];
+  guardarVentaActiva();
+  renderVenta();
+  document.getElementById("clienteNombre").value="";
+  document.getElementById("clienteCedula").value="";
+  document.getElementById("clienteDireccion").value="";
+  document.getElementById("folioReceta").value="";
+  document.getElementById("folioProveedor").value="";
+  document.getElementById('pagoInput').value="";
+  document.getElementById('cambioDisplay').value="";
+};
+
+renderVenta();
+</script>
+</body>
+</html>
