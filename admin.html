@@ -5,40 +5,33 @@
 <title>Panel Admin - Farmacia Ortopedia Lili</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-body {margin:0; font-family:system-ui,sans-serif; background:#16213e; color:#e5e7eb;}
-header {background:#0f172a; padding:1.2rem; text-align:center; font-size:2rem; font-weight:bold;}
+body {margin:0; font-family:system-ui,sans-serif; background:#f0f4f8; color:#1f2937;}
+header {background:#2563eb; padding:1.2rem; text-align:center; font-size:2rem; font-weight:bold; color:white;}
 .container {display:flex; min-height:30px;}
-aside {background:#1a243b; width:220px; padding:10px;}
-aside h2 {color:#60a5fa; font-size:1.2rem; padding: 4px 0; margin-bottom:0.8rem;}
-.nav-btn {
-  display:block; width:100%; margin:0.3rem 0; padding:0.7rem 1rem;
-  border:none; background:none; color:#e5e7eb; text-align:left;
-  border-radius:8px; cursor:pointer; transition:0.2s;
-}
-.nav-btn.active, .nav-btn:hover {background:#2563eb; color:white;}
-main {flex:1; padding:0; background:#1e2f52;}
+aside {background:#2563eb; width:230px; padding:12px; color:white;}
+aside h2 {color:#facc15; font-size:1.2rem; padding: 4px 0; margin-bottom:0.8rem;}
+.nav-btn {display:block; width:100%; margin:0.3rem 0; padding:0.7rem 1rem;
+  border:none; background:none; color:white; text-align:left;
+  border-radius:8px; cursor:pointer; transition:0.2s;}
+.nav-btn.active, .nav-btn:hover {background:#5f687a; color:white;}
+main {flex:1; padding:0; background:#e5e7eb;}
 iframe {width:100%; height:calc(100vh - 70px); border:none; background:white;}
-.logout {
-  position:fixed;top:16px;right:24px;
-  background:#dc2626; padding:8px 16px;
-  border-radius:8px;font-weight:bold; cursor:pointer;
-}
+.logout {position:fixed;top:16px;right:24px; background:#dc2626; padding:8px 16px;
+  border-radius:8px;font-weight:bold; cursor:pointer; color:white;}
 .logout:hover {background:#b91c1c;}
-.admin-section {display:none; padding:2em; border-radius:16px; margin:2em; background:#192541;}
+.admin-section {display:none; padding:2em; border-radius:16px; margin:2em; background:white; color:#111;}
 .admin-section.active {display:block;}
-table {width:100%; border-collapse:collapse; margin-top:1em; background:#1b2741;}
-th,td {border:1px solid #334; padding:7px 6px; text-align:left;}
-th {background:#223; color:#facc15;}
-tr:nth-child(even) {background:#232f4b;}
-input, select, button { padding:7px; border-radius:6px; border:none;}
-input, select { margin:0 0.4rem 0.7rem 0; background:#141f39; color:#fff;}
+table {width:100%; border-collapse:collapse; margin-top:1em; background:#fff;}
+th,td {border:1px solid #ddd; padding:7px 6px; text-align:left;}
+th {background:#2563eb; color:white;}
+tr:nth-child(even) {background:#f3f4f6;}
+input, select, button { padding:7px; border-radius:6px; border:1px solid #ccc;}
+input, select { margin:0 0.4rem 0.7rem 0; background:#f9fafb; color:#111;}
 button { background:#2563eb; color:white; cursor:pointer;}
 .btn-del {background:#dc2626;}
 .btn-edit {background:#f59e0b;}
 .btn-save {background:#16a34a;}
 .btn-small { font-size:0.95em; padding:3px 9px; margin-left:4px;}
-.flex {display:flex; gap:1em; align-items:center;}
-.area-chip {font-size:0.95em; background:#2563eb; color:white; border-radius:6px; padding:2px 10px;}
 </style>
 </head>
 <body>
@@ -47,10 +40,11 @@ button { background:#2563eb; color:white; cursor:pointer;}
 <div class="container">
   <aside>
     <hr>
-    <h2>🏪 Ventas</h2>
-    <button class="nav-btn" onclick="showPage('ven.html',this)">💊 Ventas - Farmacia</button>
-    <button class="nav-btn" onclick="showPage('ventast.html',this)">🏬 Ventas - Tienda</button>
-    <button class="nav-btn" onclick="showPage('ventasp.html',this)">📚 Ventas - Papelería</button>
+    <h2>🏪 Ventas 🏪 </h2>
+    <button class="nav-btn" onclick="showPage('farma1.html',this)">💳 Ventas - FarmaciaLili 1.0 💳</button>
+    <button class="nav-btn" onclick="showPage('farma2.html',this)">💳 Ventas - FarmaciaLili 2.0 💳</button>
+    <button class="nav-btn" onclick="showPage('farma3.html',this)">💳 Ventas - FarmaciaLili 3.0 💳</button>    
+    <button class="nav-btn" onclick="showPage('ortopedia.html',this)">🩺 Ventas - OrtopediaLili 🩺 </button>
     <hr>
     <h2>👤 Usuarios</h2>
     <button class="nav-btn" onclick="showSection('usuarios',this)">👤 Gestión de Usuarios</button>
@@ -59,16 +53,15 @@ button { background:#2563eb; color:white; cursor:pointer;}
   <main>
     <iframe id="panelFrame" src=""></iframe>
 
-    <!-- Sección usuarios -->
+    <!-- Gestión de Usuarios -->
     <div id="usuarios" class="admin-section">
       <h2>👤 Gestión de Usuarios 👤</h2>
       <table id="tabla-users">
         <thead>
           <tr>
-            <th>Nombre</th>
+            <th>Usuario</th>
             <th>Área</th>
             <th>Contraseña</th>
-            <th>Página</th>
             <th>Acciones</th>
           </tr>
         </thead>
@@ -78,31 +71,26 @@ button { background:#2563eb; color:white; cursor:pointer;}
       <input id="user-nombre" placeholder="Usuario">
       <select id="user-area">
         <option value="">Selecciona área</option>
-        <option value="Farmacia">Farmacia</option>
-        <option value="Tienda">Tienda</option>
-        <option value="Papelería">Papelería</option>
+        <option value="Farmacia1">FarmaciaLili 1.0 </option>
+        <option value="Farmacia2">FarmaciaLili 2.0 </option>
+        <option value="Farmacia3">FarmaciaLili 3.0 </option>
+        <option value="Ortopedia">OrtopediaLili</option>
         <option value="Admin">Admin</option>
-      </select>
-      <select id="user-pagina">
-        <option value="">Selecciona página</option>
-        <option value="admin.html">admin.html</option>
-        <option value="ven.html">Farmacia/ven.html</option>
-        <option value="ventast.html">Tienda/ventast.html</option>
-        <option value="ventasp.html">Papeleria/ventasp.html</option>
       </select>
       <input id="user-pass" type="password" placeholder="Contraseña">
       <button class="btn-save" onclick="agregarUsuario()">Agregar</button>
     </div>
 
-    <!-- Sección actividad admin -->
+    <!-- Actividad Usuarios -->
     <div id="actividad" class="admin-section">
       <h2>📋 Registro de Actividad Usuarios</h2>
+      <button onclick="resetActividad()" style="margin:10px;padding:6px 12px;background:#dc2626;color:#fff;border:none;border-radius:6px;cursor:pointer">🗑 Eliminar Actividad</button>
       <table id="tabla-actividad">
         <thead>
           <tr>
             <th>Usuario</th>
-            <th>Actividad</th>
-            
+            <th>Inicio</th>
+            <th>Cierre</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -112,54 +100,55 @@ button { background:#2563eb; color:white; cursor:pointer;}
 </div>
 
 <script>
-// --- Usuarios base ---
-const usuariosBase = [
-  {nombre:"AdminFarmalili", area:"Admin", pass:"Mariposa", pagina:"admin.html"},
-  {nombre:"farmacia", area:"Farmacia", pass:"farmacia123", pagina:"ven.html"},
-  {nombre:"tienda", area:"Tienda", pass:"tienda123", pagina:"ventast.html"},
-  {nombre:"papeleria", area:"Papelería", pass:"papeleria123", pagina:"ventasp.html"}
-];
-
-// Cargar usuarios desde localStorage
-let usuarios = JSON.parse(localStorage.getItem("usuarios")||"[]");
-if(usuarios.length===0){
-  usuarios = usuariosBase;
-  localStorage.setItem("usuarios", JSON.stringify(usuarios));
+// Función página según área
+function paginaPorArea(area){
+  switch(area){
+    case "Farmacia1": return "farma1.html";
+    case "Farmacia2": return "farma2.html";
+    case "Farmacia3": return "farma3.html";
+    case "Ortopedia": return "ortopedia.html";
+    case "Admin": return "admin.html";
+    default: return "index.html";
+  }
 }
 
-// --- Admin siempre activo ---
-const admin = "AdminFarmalili";
-localStorage.setItem("usuarioActivo", admin);
-localStorage.setItem("areaActiva","Admin");
-localStorage.setItem("paginaDestino","admin.html");
-localStorage.setItem("modoEspectador","true");
+// Usuarios
+let usuarios = JSON.parse(localStorage.getItem("usuarios")||"[]");
+if(usuarios.length===0){
+  usuarios=[{usuario:"AdminFarmalili", pass:"Mariposa", area:"Admin", pagina:"admin.html"}];
+  localStorage.setItem("usuarios",JSON.stringify(usuarios));
+}
 
-// --- Registro de actividad ---
+// Actividad
 let actividad = JSON.parse(localStorage.getItem("actividad")||"[]");
 
-// Guardar inicio de sesión para admin
-let inicio = new Date().toLocaleString();
-actividad.push({usuario:admin, inicio:inicio, cierre:"-"});
-localStorage.setItem("actividad", JSON.stringify(actividad));
-
 function actualizarTablaActividad(){
-  let tbody = document.querySelector("#tabla-actividad tbody");
+  let tbody=document.querySelector("#tabla-actividad tbody");
   tbody.innerHTML="";
   actividad.forEach(a=>{
-    tbody.innerHTML+=`<tr><td>${a.usuario}</td><td>${a.inicio}</td></tr>`;
+    tbody.innerHTML+=`<tr><td>${a.usuario}</td><td>${a.inicio}</td><td>${a.cierre||"-"}</td></tr>`;
   });
 }
 actualizarTablaActividad();
 
-// --- Navegación ---
-function showPage(page, btn){
+// Botón reset actividad
+function resetActividad(){
+  if(confirm("¿Seguro que deseas borrar toda la actividad?")){
+    actividad=[];
+    localStorage.setItem("actividad",JSON.stringify(actividad));
+    actualizarTablaActividad();
+  }
+}
+
+// Navegación
+function showPage(page,btn){
   document.getElementById('panelFrame').style.display='block';
   document.querySelectorAll('.admin-section').forEach(s=>s.classList.remove('active'));
   document.getElementById('panelFrame').src=page+"?viewer=admin";
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
 }
-function showSection(id, btn){
+function showSection(id,btn){
   document.getElementById('panelFrame').style.display='none';
   document.querySelectorAll('.admin-section').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -167,31 +156,34 @@ function showSection(id, btn){
   btn.classList.add('active');
 }
 
-// --- Cerrar sesión ---
+// Cerrar sesión
 function cerrarSesion(){ 
-  // Registrar cierre
-  actividad = JSON.parse(localStorage.getItem("actividad")||"[]");
-  let ultimo = actividad.length-1;
-  actividad[ultimo].cierre = new Date().toLocaleString();
-  localStorage.setItem("actividad", JSON.stringify(actividad));
+  let usuarioActivo = localStorage.getItem("usuarioActivo");
+  if(usuarioActivo){
+    actividad = JSON.parse(localStorage.getItem("actividad")||"[]");
+    for(let i=actividad.length-1;i>=0;i--){
+      if(actividad[i].usuario === usuarioActivo && !actividad[i].cierre){
+        actividad[i].cierre = new Date().toLocaleString();
+        break;
+      }
+    }
+    localStorage.setItem("actividad", JSON.stringify(actividad));
+  }
   actualizarTablaActividad();
-
   localStorage.removeItem("usuarioActivo"); 
-  localStorage.removeItem("modoEspectador");
   window.location.href="index.html"; 
 }
 
-// --- Usuarios ---
+// Usuarios
 function renderUsers(){
-  let tbody = document.querySelector("#tabla-users tbody");
+  let tbody=document.querySelector("#tabla-users tbody");
   tbody.innerHTML="";
   usuarios.forEach((u,i)=>{
-    let esAdmin = u.nombre.toLowerCase()==="adminfarmalili";
+    let esAdmin = u.usuario==="AdminFarmalili";
     tbody.innerHTML+=`<tr>
-      <td>${u.nombre}</td>
+      <td>${u.usuario}</td>
       <td>${u.area}</td>
       <td>${u.pass}</td>
-      <td>${u.pagina}</td>
       <td>
         ${esAdmin?'<span style="color:#888">Bloqueado</span>':
         `<button class="btn-edit btn-small" onclick="editarUsuario(${i})">Editar</button>
@@ -200,53 +192,36 @@ function renderUsers(){
     </tr>`;
   });
 }
-
 function agregarUsuario(){
   let nombre=document.getElementById("user-nombre").value.trim();
   let area=document.getElementById("user-area").value;
   let pass=document.getElementById("user-pass").value.trim();
-  let pagina=document.getElementById("user-pagina").value;
-  
-  if(!nombre || !area || !pass || !pagina) return alert("Completa todos los campos");
-  if(usuarios.find(u=>u.nombre===nombre)) return alert("Usuario ya existe");
-
-  usuarios.push({nombre, area, pass, pagina});
-  localStorage.setItem("usuarios", JSON.stringify(usuarios));
+  if(!nombre||!area||!pass) return alert("Completa todos los campos");
+  if(usuarios.find(u=>u.usuario===nombre)) return alert("Usuario ya existe");
+  let pagina=paginaPorArea(area);
+  usuarios.push({usuario:nombre, area, pass, pagina});
+  localStorage.setItem("usuarios",JSON.stringify(usuarios));
   renderUsers();
-
-  // Registrar inicio de sesión al agregar
-  let inicio = new Date().toLocaleString();
-  actividad.push({usuario:nombre, inicio:inicio, cierre:"-"});
-  localStorage.setItem("actividad", JSON.stringify(actividad));
-  actualizarTablaActividad();
 }
-
 function editarUsuario(i){
-  let u = usuarios[i];
-  let nuevo = prompt("Editar usuario (nombre,area,contraseña,página)", `${u.nombre},${u.area},${u.pass},${u.pagina}`);
+  let u=usuarios[i];
+  let nuevo=prompt("Editar usuario (usuario,area,contraseña)",`${u.usuario},${u.area},${u.pass}`);
   if(!nuevo) return;
-  let [nombre, area, pass, pagina] = nuevo.split(",");
-  if(!nombre || !area || !pass || !pagina) return alert("Todos los campos son obligatorios");
-  usuarios[i] = {nombre, area, pass, pagina};
-  localStorage.setItem("usuarios", JSON.stringify(usuarios));
+  let [usuario,area,pass]=nuevo.split(",");
+  if(!usuario||!area||!pass) return alert("Todos los campos son obligatorios");
+  usuarios[i]={usuario, area, pass, pagina:paginaPorArea(area)};
+  localStorage.setItem("usuarios",JSON.stringify(usuarios));
   renderUsers();
 }
-
 function borrarUsuario(i){
-  if(usuarios[i].nombre.toLowerCase()==="adminfarmalili") return alert("No puedes borrar al administrador");
-  
-  // Registrar cierre de sesión del usuario borrado
-  let cierre = new Date().toLocaleString();
-  actividad.push({usuario:usuarios[i].nombre, inicio:"-", cierre:cierre});
-  localStorage.setItem("actividad", JSON.stringify(actividad));
-  actualizarTablaActividad();
-
+  if(usuarios[i].usuario==="AdminFarmalili") return alert("No puedes borrar al administrador");
   usuarios.splice(i,1);
-  localStorage.setItem("usuarios", JSON.stringify(usuarios));
+  localStorage.setItem("usuarios",JSON.stringify(usuarios));
   renderUsers();
 }
-
 renderUsers();
 </script>
 </body>
 </html>
+
+
